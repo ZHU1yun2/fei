@@ -206,7 +206,8 @@
                         // 3秒后自动关闭弹窗
                         setTimeout(() => {
                             successModal.classList.add('hidden');
-                            // 这里可以添加页面跳转逻辑
+                            // 跳转到gaotie.html
+                            window.location.href = 'gaotie.html';
                         }, 1000);
                     } else {
                         width++;
@@ -222,6 +223,8 @@
         // 关闭弹窗
         closeModal.addEventListener('click', () => {
             successModal.classList.add('hidden');
+            // 跳转到gaotie.html
+            window.location.href = 'gaotie.html';
         });
 
         // 添加页面加载动画
@@ -230,6 +233,4 @@
         });
     </script>
 </body>
-
 </html>
-
