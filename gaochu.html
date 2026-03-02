@@ -6,29 +6,38 @@
     <title>特种作业证信息 - 惠州动车所</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 导出功能所需的库 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, sans-serif;
         }
-        /* 表格相关样式 */
         .table-container {
-            overflow-x: auto; /* 表格横向滚动 */
-            -webkit-overflow-scrolling: touch; /* 平滑滚动 */
-            overflow-x: scroll; /* 强制显示滚动条 */
-            scrollbar-width: thin; /* 现代浏览器滚动条样式 */
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overflow-x: scroll;
+            scrollbar-width: thin;
         }
-        /* 确保表格宽度足够大以触发滚动 */
         .table-container table {
-            min-width: 1200px; /* 设置最小宽度确保表格足够宽 */
+            min-width: 1200px;
         }
         .table-data {
-            white-space: nowrap; /* 防止单元格内容换行 */
+            white-space: nowrap;
         }
-        /* 红色文本样式 - 对应Excel中的红色标记 */
         .text-red {
             color: #ff0000;
         }
-        /* 模态框样式 */
+        .export-btn {
+            transition: all 0.2s ease;
+        }
+        .export-btn:hover {
+            transform: scale(1.05);
+        }
+        .export-btn:active {
+            transform: scale(0.95);
+        }
         .modal {
             display: none;
             position: fixed;
@@ -37,7 +46,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
             background-color: #fefefe;
@@ -45,18 +54,8 @@
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
-            max-width: 800px;
+            max-width: 600px;
             border-radius: 8px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
         }
     </style>
 </head>
@@ -89,7 +88,7 @@
             
             <!-- 操作按钮组 -->
             <div class="flex justify-between mb-6">
-                <a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                <a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa fa-arrow-left mr-2"></i>
                     返回主页面
                 </a>
@@ -102,6 +101,18 @@
                         <i class="fa fa-refresh mr-2"></i>
                         刷新数据
                     </button>
+                    <!-- 导出按钮组 -->
+                    <div class="inline-flex rounded-md shadow-sm">
+                        <button id="exportCsv" class="export-btn inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-l-lg hover:bg-blue-600">
+                            <i class="fa fa-file-text-o mr-2"></i>CSV
+                        </button>
+                        <button id="exportExcel" class="export-btn inline-flex items-center px-4 py-2 bg-green-600 text-white hover:bg-green-700">
+                            <i class="fa fa-file-excel-o mr-2"></i>Excel
+                        </button>
+                        <button id="exportPdf" class="export-btn inline-flex items-center px-4 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600">
+                            <i class="fa fa-file-pdf-o mr-2"></i>PDF
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -116,49 +127,46 @@
                 </div>
             </div>
             
-            <!-- 这里添加特种作业证表格 -->
-            <div class="space-y-4">
-                <!-- 表格容器 - 修改后横向滚动条将始终可见 -->
-                <div class="table-container">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <!-- 表头 -->
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工编号</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工姓名</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">组织</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">中心站/车间/顶</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属线路</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书名称</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">发证机关</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书编号</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">初次领证日期</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">有效期</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">应复审日期</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作业类别</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作项目</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">实际复审日期</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                            </tr>
-                        </thead>
-                        <!-- 表格内容 -->
-                        <tbody id="certTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- 数据将通过JavaScript动态加载 -->
-                        </tbody>
-                    </table>
-                </div>
+            <!-- 表格容器 -->
+            <div class="table-container">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <!-- 表头 -->
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工编号</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工姓名</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">组织</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">中心站/车间/顶</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属线路</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书名称</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">发证机关</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书编号</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">初次领证日期</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">有效期</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">应复审日期</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作业类别</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作项目</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">实际复审日期</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <!-- 表格内容 -->
+                    <tbody id="certTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- 数据将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
 
-    <!-- 添加/编辑记录的模态框 -->
+    <!-- 添加/编辑模态框 -->
     <div id="certModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 class="text-xl font-bold mb-4" id="modalTitle">添加新记录</h2>
-            <form id="certForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="hidden" id="recordId">
+            <span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">添加新证书</h2>
+            <form id="certForm" class="grid grid-cols-2 gap-4">
+                <input type="hidden" id="certId">
                 <div>
                     <label for="employeeId" class="block text-sm font-medium text-gray-700">员工编号</label>
                     <input type="text" id="employeeId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
@@ -172,7 +180,7 @@
                     <input type="text" id="organization" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                    <label for="workshop" class="block text-sm font-medium text-gray-700">中心站/车间/顶</label>
+                    <label for="workshop" class="block text-sm font-medium text-gray-700">中心站/车间</label>
                     <input type="text" id="workshop" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
@@ -193,15 +201,15 @@
                 </div>
                 <div>
                     <label for="initialDate" class="block text-sm font-medium text-gray-700">初次领证日期</label>
-                    <input type="date" id="initialDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="initialDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="validUntil" class="block text-sm font-medium text-gray-700">有效期</label>
-                    <input type="date" id="validUntil" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="validUntil" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="reviewDate" class="block text-sm font-medium text-gray-700">应复审日期</label>
-                    <input type="date" id="reviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="reviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="workType" class="block text-sm font-medium text-gray-700">作业类别</label>
@@ -213,35 +221,23 @@
                 </div>
                 <div>
                     <label for="actualReviewDate" class="block text-sm font-medium text-gray-700">实际复审日期</label>
-                    <input type="date" id="actualReviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="actualReviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div class="md:col-span-2 flex justify-end space-x-4 mt-4">
-                    <button type="button" id="cancelBtn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <div class="col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="isRed" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="isRed" class="ml-2 block text-sm text-gray-700">标记为红色（需注意）</label>
+                    </div>
+                </div>
+                <div class="col-span-2 flex justify-end space-x-4">
+                    <button type="button" class="closeModal inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         取消
                     </button>
-                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         保存
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- 确认删除对话框 -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="p-4">
-                <h3 class="text-lg font-medium text-gray-900">确认删除</h3>
-                <p class="mt-2 text-sm text-gray-500">您确定要删除这条记录吗？此操作无法撤销。</p>
-                <div class="mt-4 flex justify-end space-x-3">
-                    <button type="button" id="cancelDeleteBtn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        取消
-                    </button>
-                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        删除
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -253,126 +249,218 @@
     </footer>
 
     <script>
+        // GitHub 配置
+        const GITHUB_CONFIG = {
+            username: 'ZHU1YUN2',
+            repo: 'fei',
+            token: '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',
+            filePath: 'data.json'
+        };
+        
+        // 获取GitHub数据URL
+        const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.filePath}`;
+        const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.filePath}`;
+
         // 初始化数据
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查localStorage中是否有数据
-            if (!localStorage.getItem('certData')) {
-                // 如果没有数据，初始化默认数据
-                const defaultData = [
-                    {
-                        id: 1,
-                        employeeId: '150889',
-                        employeeName: '黄博',
-                        organization: '列车检修服务中心',
-                        workshop: '惠州动车所',
-                        line: '莞惠线',
-                        certName: '特种作业操作证',
-                        issuingAuthority: '',
-                        certNumber: '已报名未考试',
-                        initialDate: '',
-                        validUntil: '',
-                        reviewDate: '',
-                        workType: '高处作业',
-                        operationItem: '高处维护、安装、拆除作业',
-                        actualReviewDate: '',
-                        isRed: false
-                    },
-                    {
-                        id: 2,
-                        employeeId: '126816',
-                        employeeName: '钟锐',
-                        organization: '列车检修服务中心',
-                        workshop: '惠州动车所',
-                        line: '莞惠线',
-                        certName: '特种作业操作证',
-                        issuingAuthority: '广州市应急管理局',
-                        certNumber: 'T44142419920316255X',
-                        initialDate: '2024/12/16',
-                        validUntil: '2030/12/15',
-                        reviewDate: '2027/12/16',
-                        workType: '高处作业',
-                        operationItem: '高处安装、维护、拆除',
-                        actualReviewDate: '',
-                        isRed: false
-                    },
-                    {
-                        id: 3,
-                        employeeId: '137602',
-                        employeeName: '陈默',
-                        organization: '列车检修服务中心',
-                        workshop: '惠州动车所',
-                        line: '莞惠线',
-                        certName: '特种作业操作证',
-                        issuingAuthority: '广州市应急管理局',
-                        certNumber: 'T441623199610082017',
-                        initialDate: '2020/1/9',
-                        validUntil: '2029/4/16',
-                        reviewDate: '2026/4/16',
-                        workType: '高处作业',
-                        operationItem: '高处安装、维护、拆除',
-                        actualReviewDate: '26年1月4日提报复审',
-                        isRed: true
-                    }
-                ];
-                localStorage.setItem('certData', JSON.stringify(defaultData));
-            }
-            
+        document.addEventListener('DOMContentLoaded', async function() {
             // 加载数据
-            loadCertData();
+            await loadCertData();
             
             // 绑定事件
             bindEvents();
         });
 
-        // 加载证书数据到表格
-        function loadCertData(filterText = '') {
-            const certData = JSON.parse(localStorage.getItem('certData')) || [];
-            const tableBody = document.getElementById('certTableBody');
-            tableBody.innerHTML = '';
-            
-            // 过滤数据
-            const filteredData = certData.filter(cert => {
-                if (!filterText) return true;
-                const searchText = filterText.toLowerCase();
-                return (
-                    cert.employeeId.toLowerCase().includes(searchText) ||
-                    cert.employeeName.toLowerCase().includes(searchText) ||
-                    (cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
-                );
-            });
-            
-            // 添加数据行
-            filteredData.forEach((cert, index) => {
-                const row = document.createElement('tr');
-                const textClass = cert.isRed ? 'text-red' : 'text-gray-900';
+        // 从GitHub加载数据
+        async function fetchFromGitHub() {
+            try {
+                const response = await fetch(GITHUB_RAW_URL);
+                if (!response.ok) {
+                    // 如果文件不存在，返回空数组
+                    if (response.status === 404) {
+                        return [];
+                    }
+                    throw new Error(`GitHub请求失败: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('从GitHub加载数据失败:', error);
+                // 返回本地存储的数据作为后备
+                return JSON.parse(localStorage.getItem('certData')) || [];
+            }
+        }
+
+        // 保存数据到GitHub
+        async function saveToGitHub(data) {
+            try {
+                // 先获取文件当前SHA（如果存在）
+                let sha = null;
+                try {
+                    const fileInfo = await fetch(GITHUB_API_URL, {
+                        headers: {
+                            'Authorization': `token ${GITHUB_CONFIG.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }).then(res => res.json());
+                    sha = fileInfo.sha;
+                } catch (e) {
+                    // 文件不存在，sha保持null
+                }
                 
-                row.innerHTML = `
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${index + 1}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeId}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeName}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.organization}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workshop}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.line}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certName}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.issuingAuthority}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certNumber}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.initialDate}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.validUntil}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.reviewDate}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workType}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.operationItem}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.actualReviewDate}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">
-                        <button class="edit-btn mr-2 text-blue-600 hover:text-blue-800" data-id="${cert.id}">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="delete-btn text-red-600 hover:text-red-800" data-id="${cert.id}">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+                const response = await fetch(GITHUB_API_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `更新高处作业证数据 - ${new Date().toLocaleString()}`,
+                        content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+                        sha: sha
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub保存失败: ${response.status}`);
+                }
+                
+                // 同时更新本地存储
+                localStorage.setItem('certData', JSON.stringify(data));
+                return true;
+            } catch (error) {
+                console.error('保存到GitHub失败:', error);
+                // 如果GitHub保存失败，只保存到本地
+                localStorage.setItem('certData', JSON.stringify(data));
+                alert('数据已保存到本地，但GitHub同步失败: ' + error.message);
+                return false;
+            }
+        }
+
+        // 加载证书数据到表格
+        async function loadCertData(filterText = '') {
+            try {
+                const data = await fetchFromGitHub();
+                const tableBody = document.getElementById('certTableBody');
+                tableBody.innerHTML = '';
+                
+                // 如果没有数据，初始化默认数据
+                if (data.length === 0) {
+                    const defaultData = getDefaultData();
+                    await saveToGitHub(defaultData);
+                    return loadCertData(filterText);
+                }
+                
+                // 过滤数据
+                const filteredData = data.filter(cert => {
+                    if (!filterText) return true;
+                    const searchText = filterText.toLowerCase();
+                    return (
+                        cert.employeeId.toLowerCase().includes(searchText) ||
+                        cert.employeeName.toLowerCase().includes(searchText) ||
+                        (cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
+                    );
+                });
+                
+                // 添加数据行
+                filteredData.forEach((cert, index) => {
+                    const row = document.createElement('tr');
+                    const textClass = cert.isRed ? 'text-red' : 'text-gray-900';
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${index + 1}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeId}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeName}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.organization}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workshop}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.line}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certName}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.issuingAuthority}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certNumber}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.initialDate}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.validUntil}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.reviewDate}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workType}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.operationItem}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.actualReviewDate}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">
+                            <button class="edit-btn mr-2 text-blue-600 hover:text-blue-800" data-id="${cert.id}">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="delete-btn text-red-600 hover:text-red-800" data-id="${cert.id}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // 重新绑定编辑和删除按钮事件
+                bindEditDeleteEvents();
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                alert('加载数据失败: ' + error.message);
+            }
+        }
+
+        // 获取默认数据
+        function getDefaultData() {
+            return [
+                {
+                    id: 1,
+                    employeeId: '150889',
+                    employeeName: '黄博',
+                    organization: '列车检修服务中心',
+                    workshop: '惠州动车所',
+                    line: '莞惠线',
+                    certName: '特种作业操作证',
+                    issuingAuthority: '',
+                    certNumber: '已报名未考试',
+                    initialDate: '',
+                    validUntil: '',
+                    reviewDate: '',
+                    workType: '高处作业',
+                    operationItem: '高处维护、安装、拆除作业',
+                    actualReviewDate: '',
+                    isRed: false
+                },
+                {
+                    id: 2,
+                    employeeId: '126816',
+                    employeeName: '钟锐',
+                    organization: '列车检修服务中心',
+                    workshop: '惠州动车所',
+                    line: '莞惠线',
+                    certName: '特种作业操作证',
+                    issuingAuthority: '广州市应急管理局',
+                    certNumber: 'T44142419920316255X',
+                    initialDate: '2024/12/16',
+                    validUntil: '2030/12/15',
+                    reviewDate: '2027/12/16',
+                    workType: '高处作业',
+                    operationItem: '高处安装、维护、拆除',
+                    actualReviewDate: '',
+                    isRed: false
+                },
+                {
+                    id: 3,
+                    employeeId: '137602',
+                    employeeName: '陈默',
+                    organization: '列车检修服务中心',
+                    workshop: '惠州动车所',
+                    line: '莞惠线',
+                    certName: '特种作业操作证',
+                    issuingAuthority: '广州市应急管理局',
+                    certNumber: 'T441623199610082017',
+                    initialDate: '2020/1/9',
+                    validUntil: '2029/4/16',
+                    reviewDate: '2026/4/16',
+                    workType: '高处作业',
+                    operationItem: '高处安装、维护、拆除',
+                    actualReviewDate: '26年1月4日提报复审',
+                    isRed: true
+                }
+            ];
         }
 
         // 绑定事件
@@ -402,76 +490,69 @@
                 }
             });
             
-            // 模态框关闭按钮
+            // 导出按钮事件
+            document.getElementById('exportCsv').addEventListener('click', exportToCsv);
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('exportPdf').addEventListener('click', exportToPdf);
+            
+            // 模态框关闭事件
             document.querySelector('.close').addEventListener('click', closeModal);
-            document.getElementById('cancelBtn').addEventListener('click', closeModal);
+            document.querySelector('.closeModal').addEventListener('click', closeModal);
             
-            // 表单提交
-            document.getElementById('certForm').addEventListener('submit', function(e) {
+            // 表单提交事件
+            document.getElementById('certForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                saveCertData();
+                await saveCert();
             });
-            
-            // 表格中的编辑和删除按钮（使用事件委托）
-            document.getElementById('certTableBody').addEventListener('click', function(e) {
-                // 编辑按钮
-                if (e.target.closest('.edit-btn') || e.target.classList.contains('fa-edit')) {
-                    const btn = e.target.closest('.edit-btn') || e.target.closest('button');
-                    const id = parseInt(btn.getAttribute('data-id'));
+        }
+
+        // 绑定编辑和删除按钮事件
+        function bindEditDeleteEvents() {
+            // 编辑按钮
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
                     openModal('edit', id);
-                }
-                
-                // 删除按钮
-                if (e.target.closest('.delete-btn') || e.target.classList.contains('fa-trash')) {
-                    const btn = e.target.closest('.delete-btn') || e.target.closest('button');
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    openDeleteConfirm(id);
-                }
+                });
             });
             
-            // 删除确认对话框
-            document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
-                document.getElementById('confirmModal').style.display = 'none';
-            });
-            
-            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-                const id = parseInt(this.getAttribute('data-id'));
-                deleteCertData(id);
-                document.getElementById('confirmModal').style.display = 'none';
+            // 删除按钮
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    if (confirm('确定要删除这条记录吗？')) {
+                        deleteCert(id);
+                    }
+                });
             });
         }
 
         // 打开模态框
-        function openModal(action, id = null) {
+        async function openModal(mode, id = null) {
             const modal = document.getElementById('certModal');
-            const modalTitle = document.getElementById('modalTitle');
             const form = document.getElementById('certForm');
+            const title = document.getElementById('modalTitle');
             
-            if (action === 'add') {
-                modalTitle.textContent = '添加新记录';
+            if (mode === 'add') {
+                title.textContent = '添加新证书';
                 form.reset();
-                document.getElementById('recordId').value = '';
-            } else if (action === 'edit' && id) {
-                modalTitle.textContent = '编辑记录';
-                const certData = JSON.parse(localStorage.getItem('certData')) || [];
-                const cert = certData.find(item => item.id === id);
-                
+                document.getElementById('certId').value = '';
+            } else if (mode === 'edit' && id) {
+                title.textContent = '编辑证书信息';
+                const data = await fetchFromGitHub();
+                const cert = data.find(item => item.id === id);
                 if (cert) {
-                    document.getElementById('recordId').value = cert.id;
-                    document.getElementById('employeeId').value = cert.employeeId;
-                    document.getElementById('employeeName').value = cert.employeeName;
-                    document.getElementById('organization').value = cert.organization;
-                    document.getElementById('workshop').value = cert.workshop;
-                    document.getElementById('line').value = cert.line;
-                    document.getElementById('certName').value = cert.certName;
-                    document.getElementById('issuingAuthority').value = cert.issuingAuthority;
-                    document.getElementById('certNumber').value = cert.certNumber;
-                    document.getElementById('initialDate').value = formatDateForInput(cert.initialDate);
-                    document.getElementById('validUntil').value = formatDateForInput(cert.validUntil);
-                    document.getElementById('reviewDate').value = formatDateForInput(cert.reviewDate);
-                    document.getElementById('workType').value = cert.workType;
-                    document.getElementById('operationItem').value = cert.operationItem;
-                    document.getElementById('actualReviewDate').value = formatDateForInput(cert.actualReviewDate);
+                    Object.keys(cert).forEach(key => {
+                        const field = document.getElementById(key);
+                        if (field) {
+                            if (field.type === 'checkbox') {
+                                field.checked = cert[key];
+                            } else {
+                                field.value = cert[key] || '';
+                            }
+                        }
+                    });
+                    document.getElementById('certId').value = id;
                 }
             }
             
@@ -483,119 +564,226 @@
             document.getElementById('certModal').style.display = 'none';
         }
 
-        // 打开删除确认对话框
-        function openDeleteConfirm(id) {
-            const modal = document.getElementById('confirmModal');
-            document.getElementById('confirmDeleteBtn').setAttribute('data-id', id);
-            modal.style.display = 'block';
-        }
-
-        // 保存证书数据
-        function saveCertData() {
-            const id = document.getElementById('recordId').value;
-            const certData = JSON.parse(localStorage.getItem('certData')) || [];
-            
-            const newCert = {
-                employeeId: document.getElementById('employeeId').value,
-                employeeName: document.getElementById('employeeName').value,
-                organization: document.getElementById('organization').value,
-                workshop: document.getElementById('workshop').value,
-                line: document.getElementById('line').value,
-                certName: document.getElementById('certName').value,
-                issuingAuthority: document.getElementById('issuingAuthority').value,
-                certNumber: document.getElementById('certNumber').value,
-                initialDate: formatDateForDisplay(document.getElementById('initialDate').value),
-                validUntil: formatDateForDisplay(document.getElementById('validUntil').value),
-                reviewDate: formatDateForDisplay(document.getElementById('reviewDate').value),
-                workType: document.getElementById('workType').value,
-                operationItem: document.getElementById('operationItem').value,
-                actualReviewDate: formatDateForDisplay(document.getElementById('actualReviewDate').value),
-                isRed: false // 默认不标记为红色
-            };
-            
-            if (id) {
-                // 编辑现有记录
-                const index = certData.findIndex(item => item.id === parseInt(id));
-                if (index !== -1) {
-                    newCert.id = parseInt(id);
-                    newCert.isRed = certData[index].isRed; // 保留原有的红色标记状态
-                    certData[index] = newCert;
-                }
-            } else {
-                // 添加新记录
-                const newId = certData.length > 0 ? Math.max(...certData.map(item => item.id)) + 1 : 1;
-                newCert.id = newId;
-                certData.push(newCert);
-            }
-            
-            localStorage.setItem('certData', JSON.stringify(certData));
-            closeModal();
-            loadCertData();
-        }
-
-        // 删除证书数据
-        function deleteCertData(id) {
-            const certData = JSON.parse(localStorage.getItem('certData')) || [];
-            const filteredData = certData.filter(item => item.id !== id);
-            localStorage.setItem('certData', JSON.stringify(filteredData));
-            loadCertData();
-        }
-
-        // 日期格式化辅助函数
-        function formatDateForInput(dateStr) {
-            if (!dateStr) return '';
-            
-            // 尝试解析各种格式的日期
-            const dateParts = dateStr.split(/[/-]/);
-            if (dateParts.length === 3) {
-                let year, month, day;
+        // 保存证书
+        async function saveCert() {
+            try {
+                const form = document.getElementById('certForm');
+                const id = document.getElementById('certId').value;
+                const isRed = document.getElementById('isRed').checked;
                 
-                // 处理类似 "2020/1/9" 或 "2020-1-9" 的格式
-                if (dateParts[0].length === 4) {
-                    year = dateParts[0];
-                    month = dateParts[1].padStart(2, '0');
-                    day = dateParts[2].padStart(2, '0');
-                } 
-                // 处理类似 "26年1月4日" 的格式
-                else if (dateStr.includes('年')) {
-                    const cnDate = dateStr.replace('年', '/').replace('月', '/').replace('日', '');
-                    const cnParts = cnDate.split('/');
-                    year = '20' + cnParts[0].padStart(2, '0');
-                    month = cnParts[1].padStart(2, '0');
-                    day = cnParts[2].padStart(2, '0');
-                    return `${year}-${month}-${day}`;
+                const certData = {
+                    employeeId: document.getElementById('employeeId').value,
+                    employeeName: document.getElementById('employeeName').value,
+                    organization: document.getElementById('organization').value,
+                    workshop: document.getElementById('workshop').value,
+                    line: document.getElementById('line').value,
+                    certName: document.getElementById('certName').value,
+                    issuingAuthority: document.getElementById('issuingAuthority').value,
+                    certNumber: document.getElementById('certNumber').value,
+                    initialDate: document.getElementById('initialDate').value,
+                    validUntil: document.getElementById('validUntil').value,
+                    reviewDate: document.getElementById('reviewDate').value,
+                    workType: document.getElementById('workType').value,
+                    operationItem: document.getElementById('operationItem').value,
+                    actualReviewDate: document.getElementById('actualReviewDate').value,
+                    isRed: isRed
+                };
+                
+                let data = await fetchFromGitHub();
+                
+                if (id) {
+                    // 编辑现有记录
+                    const index = data.findIndex(item => item.id === parseInt(id));
+                    if (index !== -1) {
+                        data[index] = { ...data[index], ...certData };
+                    }
+                } else {
+                    // 添加新记录
+                    const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
+                    data.push({ id: newId, ...certData });
                 }
                 
-                return `${year}-${month}-${day}`;
+                await saveToGitHub(data);
+                await loadCertData();
+                closeModal();
+                
+            } catch (error) {
+                console.error('保存证书失败:', error);
+                alert('保存失败: ' + error.message);
             }
-            
-            return '';
         }
 
-        function formatDateForDisplay(dateStr) {
-            if (!dateStr) return '';
-            
-            // 如果是YYYY-MM-DD格式，转换为YYYY/MM/DD
-            if (dateStr.includes('-')) {
-                return dateStr.replace(/-/g, '/');
+        // 删除证书
+        async function deleteCert(id) {
+            try {
+                let data = await fetchFromGitHub();
+                data = data.filter(item => item.id !== id);
+                await saveToGitHub(data);
+                await loadCertData();
+            } catch (error) {
+                console.error('删除证书失败:', error);
+                alert('删除失败: ' + error.message);
             }
-            
-            return dateStr;
         }
 
-        // 点击模态框外部关闭模态框
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('certModal');
-            const confirmModal = document.getElementById('confirmModal');
-            
-            if (event.target === modal) {
-                modal.style.display = 'none';
+        // 导出为CSV
+        async function exportToCsv() {
+            try {
+                const data = await fetchFromGitHub();
+                if (data.length === 0) {
+                    alert('没有可导出的数据');
+                    return;
+                }
+                
+                // 处理数据
+                const processedData = data.map(item => {
+                    const newItem = {...item};
+                    delete newItem.id;
+                    delete newItem.isRed;
+                    return newItem;
+                });
+                
+                // 转换为CSV
+                const headers = Object.keys(processedData[0]).join(',');
+                const rows = processedData.map(obj => 
+                    Object.values(obj).map(v => 
+                        typeof v === 'string' && v.includes(',') ? `"${v}"` : v
+                    ).join(',')
+                );
+                const csv = [headers, ...rows].join('\n');
+                
+                // 创建下载
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `高处作业证_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('导出CSV失败:', error);
+                alert('导出失败: ' + error.message);
             }
-            
-            if (event.target === confirmModal) {
-                confirmModal.style.display = 'none';
+        }
+
+        // 导出为Excel
+        async function exportToExcel() {
+            try {
+                const data = await fetchFromGitHub();
+                if (data.length === 0) {
+                    alert('没有可导出的数据');
+                    return;
+                }
+                
+                // 处理数据
+                const processedData = data.map(item => {
+                    const newItem = {...item};
+                    delete newItem.id;
+                    delete newItem.isRed;
+                    return newItem;
+                });
+                
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(processedData);
+                
+                // 设置列宽
+                ws['!cols'] = [
+                    {wch: 10}, {wch: 15}, {wch: 10}, 
+                    {wch: 20}, {wch: 15}, {wch: 10},
+                    {wch: 20}, {wch: 20}, {wch: 25},
+                    {wch: 15}, {wch: 15}, {wch: 15},
+                    {wch: 15}, {wch: 25}, {wch: 15}
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, ws, "高处作业证数据");
+                
+                // 导出文件
+                XLSX.writeFile(wb, `高处作业证_${new Date().toLocaleDateString()}.xlsx`);
+                
+            } catch (error) {
+                console.error('导出Excel失败:', error);
+                alert('导出失败: ' + error.message);
             }
-        });
+        }
+
+        // 导出为PDF
+        async function exportToPdf() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const data = await fetchFromGitHub();
+                if (data.length === 0) {
+                    alert('没有可导出的数据');
+                    return;
+                }
+                
+                // 处理数据
+                const processedData = data.map(item => {
+                    const newItem = {...item};
+                    delete newItem.id;
+                    delete newItem.isRed;
+                    return Object.values(newItem);
+                });
+                
+                // 表头
+                const headers = [
+                    '员工编号', '员工姓名', '组织', 
+                    '中心站/车间', '所属线路', '证书名称',
+                    '发证机关', '证书编号', '初次领证日期',
+                    '有效期', '应复审日期', '作业类别',
+                    '操作项目', '实际复审日期'
+                ];
+                
+                // 创建PDF
+                const doc = new jsPDF({
+                    orientation: 'landscape'
+                });
+                
+                // 添加标题
+                doc.setFontSize(16);
+                doc.text('惠州动车所高处作业证数据', 14, 10);
+                doc.setFontSize(10);
+                doc.text(`导出时间: ${new Date().toLocaleString()}`, 14, 15);
+                
+                // 添加表格
+                doc.autoTable({
+                    head: [headers],
+                    body: processedData,
+                    startY: 20,
+                    styles: { 
+                        fontSize: 6,
+                        cellPadding: 1,
+                        overflow: 'linebreak'
+                    },
+                    columnStyles: {
+                        0: {cellWidth: 12},
+                        1: {cellWidth: 12},
+                        2: {cellWidth: 20},
+                        3: {cellWidth: 18},
+                        4: {cellWidth: 12},
+                        5: {cellWidth: 18},
+                        6: {cellWidth: 20},
+                        7: {cellWidth: 25},
+                        8: {cellWidth: 15},
+                        9: {cellWidth: 15},
+                        10: {cellWidth: 15},
+                        11: {cellWidth: 15},
+                        12: {cellWidth: 20},
+                        13: {cellWidth: 15}
+                    }
+                });
+                
+                // 保存文件
+                doc.save(`高处作业证_${new Date().getTime()}.pdf`);
+                
+            } catch (error) {
+                console.error('导出PDF失败:', error);
+                alert('导出失败: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
