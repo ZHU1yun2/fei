@@ -8,8 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- 导出功能所需的库 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, sans-serif;
@@ -53,9 +51,11 @@
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
+            width: 90%;
+            max-width: 500px;
             border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -101,18 +101,10 @@
                         <i class="fa fa-refresh mr-2"></i>
                         刷新数据
                     </button>
-                    <!-- 导出按钮组 -->
-                    <div class="inline-flex rounded-md shadow-sm">
-                        <button id="exportCsv" class="export-btn inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-l-lg hover:bg-blue-600">
-                            <i class="fa fa-file-text-o mr-2"></i>CSV
-                        </button>
-                        <button id="exportExcel" class="export-btn inline-flex items-center px-4 py-2 bg-green-600 text-white hover:bg-green-700">
-                            <i class="fa fa-file-excel-o mr-2"></i>Excel
-                        </button>
-                        <button id="exportPdf" class="export-btn inline-flex items-center px-4 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600">
-                            <i class="fa fa-file-pdf-o mr-2"></i>PDF
-                        </button>
-                    </div>
+                    <!-- 导出按钮 -->
+                    <button id="exportExcel" class="export-btn inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fa fa-file-excel-o mr-2"></i>导出Excel
+                    </button>
                 </div>
             </div>
             
@@ -165,7 +157,7 @@
         <div class="modal-content">
             <span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
             <h2 id="modalTitle" class="text-xl font-bold mb-4">添加新证书</h2>
-            <form id="certForm" class="grid grid-cols-2 gap-4">
+            <form id="certForm" class="grid grid-cols-1 gap-4">
                 <input type="hidden" id="certId">
                 <div>
                     <label for="employeeId" class="block text-sm font-medium text-gray-700">员工编号</label>
@@ -223,13 +215,13 @@
                     <label for="actualReviewDate" class="block text-sm font-medium text-gray-700">实际复审日期</label>
                     <input type="text" id="actualReviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div class="col-span-2">
+                <div>
                     <div class="flex items-center">
                         <input type="checkbox" id="isRed" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         <label for="isRed" class="ml-2 block text-sm text-gray-700">标记为红色（需注意）</label>
                     </div>
                 </div>
-                <div class="col-span-2 flex justify-end space-x-4">
+                <div class="flex justify-end space-x-4">
                     <button type="button" class="closeModal inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         取消
                     </button>
@@ -263,10 +255,7 @@
 
         // 初始化数据
         document.addEventListener('DOMContentLoaded', async function() {
-            // 加载数据
             await loadCertData();
-            
-            // 绑定事件
             bindEvents();
         });
 
@@ -275,7 +264,6 @@
             try {
                 const response = await fetch(GITHUB_RAW_URL);
                 if (!response.ok) {
-                    // 如果文件不存在，返回空数组
                     if (response.status === 404) {
                         return [];
                     }
@@ -284,7 +272,6 @@
                 return await response.json();
             } catch (error) {
                 console.error('从GitHub加载数据失败:', error);
-                // 返回本地存储的数据作为后备
                 return JSON.parse(localStorage.getItem('certData')) || [];
             }
         }
@@ -292,7 +279,6 @@
         // 保存数据到GitHub
         async function saveToGitHub(data) {
             try {
-                // 先获取文件当前SHA（如果存在）
                 let sha = null;
                 try {
                     const fileInfo = await fetch(GITHUB_API_URL, {
@@ -302,9 +288,7 @@
                         }
                     }).then(res => res.json());
                     sha = fileInfo.sha;
-                } catch (e) {
-                    // 文件不存在，sha保持null
-                }
+                } catch (e) {}
                 
                 const response = await fetch(GITHUB_API_URL, {
                     method: 'PUT',
@@ -324,12 +308,10 @@
                     throw new Error(`GitHub保存失败: ${response.status}`);
                 }
                 
-                // 同时更新本地存储
                 localStorage.setItem('certData', JSON.stringify(data));
                 return true;
             } catch (error) {
                 console.error('保存到GitHub失败:', error);
-                // 如果GitHub保存失败，只保存到本地
                 localStorage.setItem('certData', JSON.stringify(data));
                 alert('数据已保存到本地，但GitHub同步失败: ' + error.message);
                 return false;
@@ -343,14 +325,12 @@
                 const tableBody = document.getElementById('certTableBody');
                 tableBody.innerHTML = '';
                 
-                // 如果没有数据，初始化默认数据
                 if (data.length === 0) {
                     const defaultData = getDefaultData();
                     await saveToGitHub(defaultData);
                     return loadCertData(filterText);
                 }
                 
-                // 过滤数据
                 const filteredData = data.filter(cert => {
                     if (!filterText) return true;
                     const searchText = filterText.toLowerCase();
@@ -361,7 +341,6 @@
                     );
                 });
                 
-                // 添加数据行
                 filteredData.forEach((cert, index) => {
                     const row = document.createElement('tr');
                     const textClass = cert.isRed ? 'text-red' : 'text-gray-900';
@@ -394,7 +373,6 @@
                     tableBody.appendChild(row);
                 });
                 
-                // 重新绑定编辑和删除按钮事件
                 bindEditDeleteEvents();
                 
             } catch (error) {
@@ -465,24 +443,20 @@
 
         // 绑定事件
         function bindEvents() {
-            // 添加按钮
             document.getElementById('addBtn').addEventListener('click', function() {
                 openModal('add');
             });
             
-            // 刷新按钮
             document.getElementById('refreshBtn').addEventListener('click', function() {
                 loadCertData();
                 document.getElementById('searchInput').value = '';
             });
             
-            // 搜索按钮
             document.getElementById('searchBtn').addEventListener('click', function() {
                 const searchText = document.getElementById('searchInput').value.trim();
                 loadCertData(searchText);
             });
             
-            // 搜索输入框回车事件
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     const searchText = this.value.trim();
@@ -490,16 +464,11 @@
                 }
             });
             
-            // 导出按钮事件
-            document.getElementById('exportCsv').addEventListener('click', exportToCsv);
             document.getElementById('exportExcel').addEventListener('click', exportToExcel);
-            document.getElementById('exportPdf').addEventListener('click', exportToPdf);
             
-            // 模态框关闭事件
             document.querySelector('.close').addEventListener('click', closeModal);
             document.querySelector('.closeModal').addEventListener('click', closeModal);
             
-            // 表单提交事件
             document.getElementById('certForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await saveCert();
@@ -508,7 +477,6 @@
 
         // 绑定编辑和删除按钮事件
         function bindEditDeleteEvents() {
-            // 编辑按钮
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
@@ -516,7 +484,6 @@
                 });
             });
             
-            // 删除按钮
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
@@ -592,13 +559,11 @@
                 let data = await fetchFromGitHub();
                 
                 if (id) {
-                    // 编辑现有记录
                     const index = data.findIndex(item => item.id === parseInt(id));
                     if (index !== -1) {
                         data[index] = { ...data[index], ...certData };
                     }
                 } else {
-                    // 添加新记录
                     const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
                     data.push({ id: newId, ...certData });
                 }
@@ -626,50 +591,7 @@
             }
         }
 
-        // 导出为CSV
-        async function exportToCsv() {
-            try {
-                const data = await fetchFromGitHub();
-                if (data.length === 0) {
-                    alert('没有可导出的数据');
-                    return;
-                }
-                
-                // 处理数据
-                const processedData = data.map(item => {
-                    const newItem = {...item};
-                    delete newItem.id;
-                    delete newItem.isRed;
-                    return newItem;
-                });
-                
-                // 转换为CSV
-                const headers = Object.keys(processedData[0]).join(',');
-                const rows = processedData.map(obj => 
-                    Object.values(obj).map(v => 
-                        typeof v === 'string' && v.includes(',') ? `"${v}"` : v
-                    ).join(',')
-                );
-                const csv = [headers, ...rows].join('\n');
-                
-                // 创建下载
-                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `高处作业证_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-            } catch (error) {
-                console.error('导出CSV失败:', error);
-                alert('导出失败: ' + error.message);
-            }
-        }
-
-        // 导出为Excel
+        // 导出为Excel（中文列名）
         async function exportToExcel() {
             try {
                 const data = await fetchFromGitHub();
@@ -678,11 +600,32 @@
                     return;
                 }
                 
-                // 处理数据
+                // 处理数据并映射中文列名
                 const processedData = data.map(item => {
-                    const newItem = {...item};
-                    delete newItem.id;
-                    delete newItem.isRed;
+                    const newItem = {};
+                    // 定义中英文字段映射
+                    const fieldMap = {
+                        employeeId: '员工编号',
+                        employeeName: '员工姓名',
+                        organization: '组织',
+                        workshop: '中心站/车间',
+                        line: '所属线路',
+                        certName: '证书名称',
+                        issuingAuthority: '发证机关',
+                        certNumber: '证书编号',
+                        initialDate: '初次领证日期',
+                        validUntil: '有效期',
+                        reviewDate: '应复审日期',
+                        workType: '作业类别',
+                        operationItem: '操作项目',
+                        actualReviewDate: '实际复审日期'
+                    };
+                    
+                    // 转换字段名
+                    Object.keys(fieldMap).forEach(key => {
+                        newItem[fieldMap[key]] = item[key] || '';
+                    });
+                    
                     return newItem;
                 });
                 
@@ -696,7 +639,7 @@
                     {wch: 20}, {wch: 15}, {wch: 10},
                     {wch: 20}, {wch: 20}, {wch: 25},
                     {wch: 15}, {wch: 15}, {wch: 15},
-                    {wch: 15}, {wch: 25}, {wch: 15}
+                    {wch: 15}, {wch: 25}
                 ];
                 
                 XLSX.utils.book_append_sheet(wb, ws, "高处作业证数据");
@@ -706,81 +649,6 @@
                 
             } catch (error) {
                 console.error('导出Excel失败:', error);
-                alert('导出失败: ' + error.message);
-            }
-        }
-
-        // 导出为PDF
-        async function exportToPdf() {
-            try {
-                const { jsPDF } = window.jspdf;
-                const data = await fetchFromGitHub();
-                if (data.length === 0) {
-                    alert('没有可导出的数据');
-                    return;
-                }
-                
-                // 处理数据
-                const processedData = data.map(item => {
-                    const newItem = {...item};
-                    delete newItem.id;
-                    delete newItem.isRed;
-                    return Object.values(newItem);
-                });
-                
-                // 表头
-                const headers = [
-                    '员工编号', '员工姓名', '组织', 
-                    '中心站/车间', '所属线路', '证书名称',
-                    '发证机关', '证书编号', '初次领证日期',
-                    '有效期', '应复审日期', '作业类别',
-                    '操作项目', '实际复审日期'
-                ];
-                
-                // 创建PDF
-                const doc = new jsPDF({
-                    orientation: 'landscape'
-                });
-                
-                // 添加标题
-                doc.setFontSize(16);
-                doc.text('惠州动车所高处作业证数据', 14, 10);
-                doc.setFontSize(10);
-                doc.text(`导出时间: ${new Date().toLocaleString()}`, 14, 15);
-                
-                // 添加表格
-                doc.autoTable({
-                    head: [headers],
-                    body: processedData,
-                    startY: 20,
-                    styles: { 
-                        fontSize: 6,
-                        cellPadding: 1,
-                        overflow: 'linebreak'
-                    },
-                    columnStyles: {
-                        0: {cellWidth: 12},
-                        1: {cellWidth: 12},
-                        2: {cellWidth: 20},
-                        3: {cellWidth: 18},
-                        4: {cellWidth: 12},
-                        5: {cellWidth: 18},
-                        6: {cellWidth: 20},
-                        7: {cellWidth: 25},
-                        8: {cellWidth: 15},
-                        9: {cellWidth: 15},
-                        10: {cellWidth: 15},
-                        11: {cellWidth: 15},
-                        12: {cellWidth: 20},
-                        13: {cellWidth: 15}
-                    }
-                });
-                
-                // 保存文件
-                doc.save(`高处作业证_${new Date().getTime()}.pdf`);
-                
-            } catch (error) {
-                console.error('导出PDF失败:', error);
                 alert('导出失败: ' + error.message);
             }
         }
