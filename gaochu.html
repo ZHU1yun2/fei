@@ -13,7 +13,6 @@
         /* 表格相关样式 */
         .table-container {
             overflow-x: auto; /* 表格横向滚动 */
-            /* 添加以下样式使滚动条始终可见 */
             -webkit-overflow-scrolling: touch; /* 平滑滚动 */
             overflow-x: scroll; /* 强制显示滚动条 */
             scrollbar-width: thin; /* 现代浏览器滚动条样式 */
@@ -29,6 +28,36 @@
         .text-red {
             color: #ff0000;
         }
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -37,7 +66,6 @@
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center">
-                    <!-- 返回按钮 - 确保链接正确 -->
                     <a href="gt.html" class="mr-4 text-gray-600 hover:text-primary transition-colors">
                         <i class="fa fa-arrow-left"></i>
                     </a>
@@ -59,14 +87,37 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">高处作业证</h1>
             
-            <!-- 这里添加特种作业证表格 -->
-            <div class="space-y-4">
-                <!-- 返回按钮 - 确保链接正确且样式一致 -->
-                <a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors mb-6">
+            <!-- 操作按钮组 -->
+            <div class="flex justify-between mb-6">
+                <a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                     <i class="fa fa-arrow-left mr-2"></i>
                     返回主页面
                 </a>
-                
+                <div class="space-x-2">
+                    <button id="addBtn" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fa fa-plus mr-2"></i>
+                        添加记录
+                    </button>
+                    <button id="refreshBtn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fa fa-refresh mr-2"></i>
+                        刷新数据
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="搜索员工姓名、编号或证书编号..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="searchBtn" class="absolute right-2 top-2 text-gray-500 hover:text-blue-600">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 这里添加特种作业证表格 -->
+            <div class="space-y-4">
                 <!-- 表格容器 - 修改后横向滚动条将始终可见 -->
                 <div class="table-container">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -88,64 +139,12 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作业类别</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作项目</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">实际复审日期</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                             </tr>
                         </thead>
                         <!-- 表格内容 -->
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- 第一行数据 -->
-                            <tr>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">1</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">150889</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">黄博</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">列车检修服务中心</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">惠州动车所</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">莞惠线</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">特种作业操作证</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">已报名未考试</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">高处作业</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">高处维护、安装、拆除作业</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                            </tr>
-                            <!-- 第二行数据 -->
-                            <tr>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">2</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">126816</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">钟锐</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">列车检修服务中心</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">惠州动车所</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">莞惠线</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">特种作业操作证</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">广州市应急管理局</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">T44142419920316255X</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">2024/12/16</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">2030/12/15</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">2027/12/16</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">高处作业</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">高处安装、维护、拆除</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data"></td>
-                            </tr>
-                            <!-- 第三行数据 - 带红色文本 -->
-                            <tr>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">3</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">137602</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">陈默</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">列车检修服务中心</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">惠州动车所</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">莞惠线</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">特种作业操作证</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">广州市应急管理局</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">T441623199610082017</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">2020/1/9</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">2029/4/16</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">2026/4/16</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">高处作业</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">高处安装、维护、拆除</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-red table-data">26年1月4日提报复审</td>
-                            </tr>
+                        <tbody id="certTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- 数据将通过JavaScript动态加载 -->
                         </tbody>
                     </table>
                 </div>
@@ -153,11 +152,450 @@
         </div>
     </main>
 
+    <!-- 添加/编辑记录的模态框 -->
+    <div id="certModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 class="text-xl font-bold mb-4" id="modalTitle">添加新记录</h2>
+            <form id="certForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="recordId">
+                <div>
+                    <label for="employeeId" class="block text-sm font-medium text-gray-700">员工编号</label>
+                    <input type="text" id="employeeId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="employeeName" class="block text-sm font-medium text-gray-700">员工姓名</label>
+                    <input type="text" id="employeeName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="organization" class="block text-sm font-medium text-gray-700">组织</label>
+                    <input type="text" id="organization" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="workshop" class="block text-sm font-medium text-gray-700">中心站/车间/顶</label>
+                    <input type="text" id="workshop" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="line" class="block text-sm font-medium text-gray-700">所属线路</label>
+                    <input type="text" id="line" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="certName" class="block text-sm font-medium text-gray-700">证书名称</label>
+                    <input type="text" id="certName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="issuingAuthority" class="block text-sm font-medium text-gray-700">发证机关</label>
+                    <input type="text" id="issuingAuthority" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="certNumber" class="block text-sm font-medium text-gray-700">证书编号</label>
+                    <input type="text" id="certNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="initialDate" class="block text-sm font-medium text-gray-700">初次领证日期</label>
+                    <input type="date" id="initialDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="validUntil" class="block text-sm font-medium text-gray-700">有效期</label>
+                    <input type="date" id="validUntil" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="reviewDate" class="block text-sm font-medium text-gray-700">应复审日期</label>
+                    <input type="date" id="reviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="workType" class="block text-sm font-medium text-gray-700">作业类别</label>
+                    <input type="text" id="workType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="operationItem" class="block text-sm font-medium text-gray-700">操作项目</label>
+                    <input type="text" id="operationItem" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="actualReviewDate" class="block text-sm font-medium text-gray-700">实际复审日期</label>
+                    <input type="date" id="actualReviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="md:col-span-2 flex justify-end space-x-4 mt-4">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        取消
+                    </button>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除对话框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="p-4">
+                <h3 class="text-lg font-medium text-gray-900">确认删除</h3>
+                <p class="mt-2 text-sm text-gray-500">您确定要删除这条记录吗？此操作无法撤销。</p>
+                <div class="mt-4 flex justify-end space-x-3">
+                    <button type="button" id="cancelDeleteBtn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        取消
+                    </button>
+                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 页脚 -->
     <footer class="bg-white border-t mt-8 py-6">
         <div class="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
             <p>© 2026 惠州动车所系统. 版权所有.</p>
         </div>
     </footer>
+
+    <script>
+        // 初始化数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查localStorage中是否有数据
+            if (!localStorage.getItem('certData')) {
+                // 如果没有数据，初始化默认数据
+                const defaultData = [
+                    {
+                        id: 1,
+                        employeeId: '150889',
+                        employeeName: '黄博',
+                        organization: '列车检修服务中心',
+                        workshop: '惠州动车所',
+                        line: '莞惠线',
+                        certName: '特种作业操作证',
+                        issuingAuthority: '',
+                        certNumber: '已报名未考试',
+                        initialDate: '',
+                        validUntil: '',
+                        reviewDate: '',
+                        workType: '高处作业',
+                        operationItem: '高处维护、安装、拆除作业',
+                        actualReviewDate: '',
+                        isRed: false
+                    },
+                    {
+                        id: 2,
+                        employeeId: '126816',
+                        employeeName: '钟锐',
+                        organization: '列车检修服务中心',
+                        workshop: '惠州动车所',
+                        line: '莞惠线',
+                        certName: '特种作业操作证',
+                        issuingAuthority: '广州市应急管理局',
+                        certNumber: 'T44142419920316255X',
+                        initialDate: '2024/12/16',
+                        validUntil: '2030/12/15',
+                        reviewDate: '2027/12/16',
+                        workType: '高处作业',
+                        operationItem: '高处安装、维护、拆除',
+                        actualReviewDate: '',
+                        isRed: false
+                    },
+                    {
+                        id: 3,
+                        employeeId: '137602',
+                        employeeName: '陈默',
+                        organization: '列车检修服务中心',
+                        workshop: '惠州动车所',
+                        line: '莞惠线',
+                        certName: '特种作业操作证',
+                        issuingAuthority: '广州市应急管理局',
+                        certNumber: 'T441623199610082017',
+                        initialDate: '2020/1/9',
+                        validUntil: '2029/4/16',
+                        reviewDate: '2026/4/16',
+                        workType: '高处作业',
+                        operationItem: '高处安装、维护、拆除',
+                        actualReviewDate: '26年1月4日提报复审',
+                        isRed: true
+                    }
+                ];
+                localStorage.setItem('certData', JSON.stringify(defaultData));
+            }
+            
+            // 加载数据
+            loadCertData();
+            
+            // 绑定事件
+            bindEvents();
+        });
+
+        // 加载证书数据到表格
+        function loadCertData(filterText = '') {
+            const certData = JSON.parse(localStorage.getItem('certData')) || [];
+            const tableBody = document.getElementById('certTableBody');
+            tableBody.innerHTML = '';
+            
+            // 过滤数据
+            const filteredData = certData.filter(cert => {
+                if (!filterText) return true;
+                const searchText = filterText.toLowerCase();
+                return (
+                    cert.employeeId.toLowerCase().includes(searchText) ||
+                    cert.employeeName.toLowerCase().includes(searchText) ||
+                    (cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
+                );
+            });
+            
+            // 添加数据行
+            filteredData.forEach((cert, index) => {
+                const row = document.createElement('tr');
+                const textClass = cert.isRed ? 'text-red' : 'text-gray-900';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${index + 1}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeId}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeName}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.organization}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workshop}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.line}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certName}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.issuingAuthority}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certNumber}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.initialDate}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.validUntil}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.reviewDate}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workType}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.operationItem}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.actualReviewDate}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">
+                        <button class="edit-btn mr-2 text-blue-600 hover:text-blue-800" data-id="${cert.id}">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-800" data-id="${cert.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 添加按钮
+            document.getElementById('addBtn').addEventListener('click', function() {
+                openModal('add');
+            });
+            
+            // 刷新按钮
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                loadCertData();
+                document.getElementById('searchInput').value = '';
+            });
+            
+            // 搜索按钮
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                const searchText = document.getElementById('searchInput').value.trim();
+                loadCertData(searchText);
+            });
+            
+            // 搜索输入框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchText = this.value.trim();
+                    loadCertData(searchText);
+                }
+            });
+            
+            // 模态框关闭按钮
+            document.querySelector('.close').addEventListener('click', closeModal);
+            document.getElementById('cancelBtn').addEventListener('click', closeModal);
+            
+            // 表单提交
+            document.getElementById('certForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCertData();
+            });
+            
+            // 表格中的编辑和删除按钮（使用事件委托）
+            document.getElementById('certTableBody').addEventListener('click', function(e) {
+                // 编辑按钮
+                if (e.target.closest('.edit-btn') || e.target.classList.contains('fa-edit')) {
+                    const btn = e.target.closest('.edit-btn') || e.target.closest('button');
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    openModal('edit', id);
+                }
+                
+                // 删除按钮
+                if (e.target.closest('.delete-btn') || e.target.classList.contains('fa-trash')) {
+                    const btn = e.target.closest('.delete-btn') || e.target.closest('button');
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    openDeleteConfirm(id);
+                }
+            });
+            
+            // 删除确认对话框
+            document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+                document.getElementById('confirmModal').style.display = 'none';
+            });
+            
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const id = parseInt(this.getAttribute('data-id'));
+                deleteCertData(id);
+                document.getElementById('confirmModal').style.display = 'none';
+            });
+        }
+
+        // 打开模态框
+        function openModal(action, id = null) {
+            const modal = document.getElementById('certModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const form = document.getElementById('certForm');
+            
+            if (action === 'add') {
+                modalTitle.textContent = '添加新记录';
+                form.reset();
+                document.getElementById('recordId').value = '';
+            } else if (action === 'edit' && id) {
+                modalTitle.textContent = '编辑记录';
+                const certData = JSON.parse(localStorage.getItem('certData')) || [];
+                const cert = certData.find(item => item.id === id);
+                
+                if (cert) {
+                    document.getElementById('recordId').value = cert.id;
+                    document.getElementById('employeeId').value = cert.employeeId;
+                    document.getElementById('employeeName').value = cert.employeeName;
+                    document.getElementById('organization').value = cert.organization;
+                    document.getElementById('workshop').value = cert.workshop;
+                    document.getElementById('line').value = cert.line;
+                    document.getElementById('certName').value = cert.certName;
+                    document.getElementById('issuingAuthority').value = cert.issuingAuthority;
+                    document.getElementById('certNumber').value = cert.certNumber;
+                    document.getElementById('initialDate').value = formatDateForInput(cert.initialDate);
+                    document.getElementById('validUntil').value = formatDateForInput(cert.validUntil);
+                    document.getElementById('reviewDate').value = formatDateForInput(cert.reviewDate);
+                    document.getElementById('workType').value = cert.workType;
+                    document.getElementById('operationItem').value = cert.operationItem;
+                    document.getElementById('actualReviewDate').value = formatDateForInput(cert.actualReviewDate);
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('certModal').style.display = 'none';
+        }
+
+        // 打开删除确认对话框
+        function openDeleteConfirm(id) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmDeleteBtn').setAttribute('data-id', id);
+            modal.style.display = 'block';
+        }
+
+        // 保存证书数据
+        function saveCertData() {
+            const id = document.getElementById('recordId').value;
+            const certData = JSON.parse(localStorage.getItem('certData')) || [];
+            
+            const newCert = {
+                employeeId: document.getElementById('employeeId').value,
+                employeeName: document.getElementById('employeeName').value,
+                organization: document.getElementById('organization').value,
+                workshop: document.getElementById('workshop').value,
+                line: document.getElementById('line').value,
+                certName: document.getElementById('certName').value,
+                issuingAuthority: document.getElementById('issuingAuthority').value,
+                certNumber: document.getElementById('certNumber').value,
+                initialDate: formatDateForDisplay(document.getElementById('initialDate').value),
+                validUntil: formatDateForDisplay(document.getElementById('validUntil').value),
+                reviewDate: formatDateForDisplay(document.getElementById('reviewDate').value),
+                workType: document.getElementById('workType').value,
+                operationItem: document.getElementById('operationItem').value,
+                actualReviewDate: formatDateForDisplay(document.getElementById('actualReviewDate').value),
+                isRed: false // 默认不标记为红色
+            };
+            
+            if (id) {
+                // 编辑现有记录
+                const index = certData.findIndex(item => item.id === parseInt(id));
+                if (index !== -1) {
+                    newCert.id = parseInt(id);
+                    newCert.isRed = certData[index].isRed; // 保留原有的红色标记状态
+                    certData[index] = newCert;
+                }
+            } else {
+                // 添加新记录
+                const newId = certData.length > 0 ? Math.max(...certData.map(item => item.id)) + 1 : 1;
+                newCert.id = newId;
+                certData.push(newCert);
+            }
+            
+            localStorage.setItem('certData', JSON.stringify(certData));
+            closeModal();
+            loadCertData();
+        }
+
+        // 删除证书数据
+        function deleteCertData(id) {
+            const certData = JSON.parse(localStorage.getItem('certData')) || [];
+            const filteredData = certData.filter(item => item.id !== id);
+            localStorage.setItem('certData', JSON.stringify(filteredData));
+            loadCertData();
+        }
+
+        // 日期格式化辅助函数
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return '';
+            
+            // 尝试解析各种格式的日期
+            const dateParts = dateStr.split(/[/-]/);
+            if (dateParts.length === 3) {
+                let year, month, day;
+                
+                // 处理类似 "2020/1/9" 或 "2020-1-9" 的格式
+                if (dateParts[0].length === 4) {
+                    year = dateParts[0];
+                    month = dateParts[1].padStart(2, '0');
+                    day = dateParts[2].padStart(2, '0');
+                } 
+                // 处理类似 "26年1月4日" 的格式
+                else if (dateStr.includes('年')) {
+                    const cnDate = dateStr.replace('年', '/').replace('月', '/').replace('日', '');
+                    const cnParts = cnDate.split('/');
+                    year = '20' + cnParts[0].padStart(2, '0');
+                    month = cnParts[1].padStart(2, '0');
+                    day = cnParts[2].padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                }
+                
+                return `${year}-${month}-${day}`;
+            }
+            
+            return '';
+        }
+
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '';
+            
+            // 如果是YYYY-MM-DD格式，转换为YYYY/MM/DD
+            if (dateStr.includes('-')) {
+                return dateStr.replace(/-/g, '/');
+            }
+            
+            return dateStr;
+        }
+
+        // 点击模态框外部关闭模态框
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('certModal');
+            const confirmModal = document.getElementById('confirmModal');
+            
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+            
+            if (event.target === confirmModal) {
+                confirmModal.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
