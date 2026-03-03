@@ -9,10 +9,11 @@
     <!-- ... -->
 
     <script>
-        // GitHub 配置 - 移除了硬编码的 token
+        // GitHub 配置 - 保持 Token 公开
         const GITHUB_CONFIG = {
             username: 'zhu1yun2',
             repo: 'fei',
+            token: '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', // 保持公开
             filePath: 'data.json'
         };
 
@@ -20,52 +21,82 @@
         const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.filePath}`;
         const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.filePath}`;
 
-        // 存储 GitHub Token
-        let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
-
         // 初始化数据
         document.addEventListener('DOMContentLoaded', async function() {
-            // 检查是否有保存的 token
-            if (!GITHUB_TOKEN) {
-                await promptForToken();
-            }
-            
             try {
+                // 首先检查Token是否有效
+                const isValid = await checkTokenValidity();
+                if (!isValid) {
+                    alert('GitHub Token无效或已过期，请更新Token');
+                    return;
+                }
+                
                 await loadCertData();
                 bindEvents();
             } catch (error) {
                 console.error('初始化失败:', error);
-                if (error.message.includes('401')) {
-                    alert('GitHub 认证失败，请重新输入有效的 Token');
-                    await promptForToken();
-                    await loadCertData();
-                    bindEvents();
-                }
+                alert('初始化失败: ' + error.message);
             }
         });
 
-        // 提示用户输入 GitHub Token
-        async function promptForToken() {
-            const token = prompt('请输入 GitHub 个人访问 Token (需要 repo 权限):');
-            if (token) {
-                GITHUB_TOKEN = token;
-                localStorage.setItem('github_token', token);
-                return true;
+        // 检查Token有效性
+        async function checkTokenValidity() {
+            try {
+                const response = await fetch(`https://api.github.com/user`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                // 200-299 状态码表示Token有效
+                if (response.ok) {
+                    return true;
+                }
+                
+                // 401 表示Token无效
+                if (response.status === 401) {
+                    return false;
+                }
+                
+                // 其他错误
+                throw new Error(`Token验证失败: ${response.status}`);
+            } catch (error) {
+                console.error('Token验证错误:', error);
+                return false;
             }
-            throw new Error('未提供 GitHub Token');
         }
 
         // 从GitHub加载数据
         async function fetchFromGitHub() {
             try {
-                const response = await fetch(GITHUB_RAW_URL);
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        return [];
+                // 尝试从API获取数据（使用Token）
+                const apiResponse = await fetch(GITHUB_API_URL, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
                     }
-                    throw new Error(`GitHub请求失败: ${response.status}`);
+                });
+                
+                if (apiResponse.ok) {
+                    const fileInfo = await apiResponse.json();
+                    // 解码Base64内容
+                    const content = JSON.parse(decodeURIComponent(escape(atob(fileInfo.content))));
+                    return content;
                 }
-                return await response.json();
+                
+                // 如果API请求失败，尝试从RAW获取（不使用Token）
+                const rawResponse = await fetch(GITHUB_RAW_URL);
+                if (rawResponse.ok) {
+                    return await rawResponse.json();
+                }
+                
+                // 如果都失败，检查是否是404（文件不存在）
+                if (apiResponse.status === 404 || rawResponse.status === 404) {
+                    return [];
+                }
+                
+                throw new Error(`GitHub请求失败: API状态${apiResponse.status}, RAW状态${rawResponse.status}`);
             } catch (error) {
                 console.error('从GitHub加载数据失败:', error);
                 return JSON.parse(localStorage.getItem('certData')) || [];
@@ -74,16 +105,14 @@
 
         // 保存数据到GitHub
         async function saveToGitHub(data) {
-            if (!GITHUB_TOKEN) {
-                await promptForToken();
-            }
-            
             try {
                 let sha = null;
+                
+                // 尝试获取文件SHA（用于更新现有文件）
                 try {
                     const fileInfo = await fetch(GITHUB_API_URL, {
                         headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Authorization': `token ${GITHUB_CONFIG.token}`,
                             'Accept': 'application/vnd.github.v3+json'
                         }
                     }).then(res => res.json());
@@ -95,7 +124,7 @@
                 const response = await fetch(GITHUB_API_URL, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
@@ -107,18 +136,20 @@
                 });
 
                 if (!response.ok) {
-                    // 如果 token 无效，清除保存的 token
+                    // 401错误处理
                     if (response.status === 401) {
-                        localStorage.removeItem('github_token');
-                        GITHUB_TOKEN = '';
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`GitHub Token无效或已过期: ${errorData.message || '无详细信息'}`);
                     }
                     throw new Error(`GitHub保存失败: ${response.status}`);
                 }
 
+                // 保存到本地存储作为备份
                 localStorage.setItem('certData', JSON.stringify(data));
                 return true;
             } catch (error) {
                 console.error('保存到GitHub失败:', error);
+                // 即使GitHub保存失败，也保存到本地
                 localStorage.setItem('certData', JSON.stringify(data));
                 alert('数据已保存到本地，但GitHub同步失败: ' + error.message);
                 return false;
