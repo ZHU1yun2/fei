@@ -36,110 +36,36 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// 绑定令牌弹窗相关事件
-function bindTokenEvents() {
-    const closeButtons = document.querySelectorAll('.close, .closeTokenModal');
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', closeTokenModal);
-    });
-    document.getElementById('confirmTokenBtn').addEventListener('click', handleConfirmToken);
-}
-
-// 打开令牌弹窗
-function openTokenModal(callback) {
-    pendingOperation = callback;
-    document.getElementById('tokenModal').style.display = 'block';
-}
-
-// 关闭令牌弹窗
-function closeTokenModal() {
-    document.getElementById('tokenModal').style.display = 'none';
-    pendingOperation = null;
-    document.getElementById('githubTokenInput').value = '';
-}
-
-// 确认令牌，执行后续操作
-async function handleConfirmToken() {
-    const token = document.getElementById('githubTokenInput').value.trim();
-    if (!token) {
-        alert('请输入有效的GitHub访问令牌');
-        return;
-    }
-
-    GITHUB_CONFIG.token = token;
-    closeTokenModal();
-    
-    if (pendingOperation && typeof pendingOperation === 'function') {
-        try {
-            await pendingOperation();
-        } catch (error) {
-            console.error('操作执行失败:', error);
-            alert('操作执行失败: ' + error.message);
-        }
-    }
-}
-
 // 从GitHub加载数据 - 公开仓库可以直接读取，不需要令牌
 async function fetchFromGitHub() {
     try {
         const response = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
         if (!response.ok) {
             if (response.status === 404) {
+                // 文件不存在，返回空数组
                 return [];
             }
             throw new Error(`GitHub请求失败: ${response.status}`);
         }
-        return await response.json();
+        
+        // 检查响应内容是否为空
+        const text = await response.text();
+        if (!text.trim()) {
+            return [];
+        }
+        
+        // 尝试解析JSON
+        try {
+            return JSON.parse(text);
+        } catch (parseError) {
+            console.error('JSON解析失败:', parseError);
+            // 如果JSON解析失败，返回空数组
+            return [];
+        }
     } catch (error) {
         console.error('从GitHub加载数据失败:', error);
-        throw error;
-    }
-}
-
-// 保存数据到GitHub - 需要令牌
-async function saveToGitHub(data) {
-    if (!GITHUB_CONFIG.token) {
-        throw new Error('需要授权才能保存数据，请输入GitHub访问令牌');
-    }
-
-    try {
-        let sha = null;
-        try {
-            const fileInfo = await fetch(GITHUB_API_URL, {
-                headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            }).then(res => res.json());
-            sha = fileInfo.sha;
-        } catch (e) {
-            console.log('获取文件SHA失败，可能是首次创建', e);
-        }
-
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-        const response = await fetch(GITHUB_API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `更新高处作业证数据 - ${new Date().toLocaleString()}`,
-                content: content,
-                sha: sha
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`GitHub保存失败: ${response.status} - ${errorData.message || '未知错误'}`);
-        }
-
-        return true;
-    } catch (error) {
-        console.error('保存到GitHub失败:', error);
-        throw error;
+        // 出现错误时返回空数组而不是抛出错误
+        return [];
     }
 }
 
@@ -150,7 +76,8 @@ async function loadCertData(filterText = '') {
         const tableBody = document.getElementById('certTableBody');
         tableBody.innerHTML = '';
 
-        if (data.length === 0) {
+        // 如果数据为空且不是搜索操作，尝试初始化默认数据
+        if (data.length === 0 && !filterText) {
             const defaultData = getDefaultData();
             openTokenModal(async () => {
                 try {
@@ -173,6 +100,13 @@ async function loadCertData(filterText = '') {
                 (cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
             );
         });
+
+        if (filteredData.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="16" class="px-4 py-3 text-center text-sm text-gray-500">没有找到匹配的记录</td>`;
+            tableBody.appendChild(row);
+            return;
+        }
 
         filteredData.forEach((cert, index) => {
             const row = document.createElement('tr');
@@ -208,10 +142,13 @@ async function loadCertData(filterText = '') {
         bindEditDeleteEvents();
     } catch (error) {
         console.error('加载数据失败:', error);
-        alert('加载数据失败: ' + error.message);
+        const tableBody = document.getElementById('certTableBody');
+        tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-red-500">加载数据失败: ${error.message}</td></tr>`;
     }
 }
 
+// 其余代码保持不变...
+</script>
 // 获取默认数据（保持不变）
 function getDefaultData() {
     return [
