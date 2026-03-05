@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         bindTokenEvents();
     } catch (error) {
         console.error('初始化失败:', error);
-        alert('初始化失败: ' + error.message);
+        // 在表格中显示错误信息而不是alert
+        const tableBody = document.getElementById('certTableBody');
+        if(tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-red-500">初始化失败: ${error.message}</td></tr>`;
+        }
     }
 });
 
@@ -56,7 +60,9 @@ async function fetchFromGitHub() {
         
         // 尝试解析JSON
         try {
-            return JSON.parse(text);
+            const data = JSON.parse(text);
+            // 确保返回的是数组
+            return Array.isArray(data) ? data : [];
         } catch (parseError) {
             console.error('JSON解析失败:', parseError);
             // 如果JSON解析失败，返回空数组
@@ -74,6 +80,10 @@ async function loadCertData(filterText = '') {
     try {
         const data = await fetchFromGitHub();
         const tableBody = document.getElementById('certTableBody');
+        if(!tableBody) {
+            throw new Error('无法找到表格元素');
+        }
+        
         tableBody.innerHTML = '';
 
         // 如果数据为空且不是搜索操作，尝试初始化默认数据
@@ -85,7 +95,7 @@ async function loadCertData(filterText = '') {
                     await loadCertData(filterText);
                 } catch (error) {
                     console.error('初始化数据失败:', error);
-                    alert('初始化数据失败: ' + error.message);
+                    tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-red-500">初始化数据失败: ${error.message}</td></tr>`;
                 }
             });
             return;
@@ -143,13 +153,13 @@ async function loadCertData(filterText = '') {
     } catch (error) {
         console.error('加载数据失败:', error);
         const tableBody = document.getElementById('certTableBody');
-        tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-red-500">加载数据失败: ${error.message}</td></tr>`;
+        if(tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-red-500">加载数据失败: ${error.message}</td></tr>`;
+        }
     }
 }
 
-// 其余代码保持不变...
-</script>
-// 获取默认数据（保持不变）
+// 获取默认数据
 function getDefaultData() {
     return [
         {
@@ -208,6 +218,9 @@ function getDefaultData() {
         }
     ];
 }
+
+// 其余代码保持不变...
+</script>
 
 // 绑定事件
 function bindEvents() {
