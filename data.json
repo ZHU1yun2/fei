@@ -1,38 +1,20 @@
 [
-    {
-        "id": 1,
-        "employeeId": "150889",
-        "employeeName": "黄博",
-        "organization": "列车检修服务中心",
-        "workshop": "惠州动车所",
-        "line": "莞惠线",
-        "certName": "特种作业操作证",
-        "issuingAuthority": "",
-        "certNumber": "已报名未考试",
-        "initialDate": "",
-        "validUntil": "",
-        "reviewDate": "",
-        "workType": "高处作业",
-        "operationItem": "高处维护、安装、拆除作业",
-        "actualReviewDate": "",
-        "isRed": false
-    },
-    {
-        "id": 2,
-        "employeeId": "126816",
-        "employeeName": "钟锐",
-        "organization": "列车检修服务中心",
-        "workshop": "惠州动车所",
-        "line": "莞惠线",
-        "certName": "特种作业操作证",
-        "issuingAuthority": "广州市应急管理局",
-        "certNumber": "T44142419920316255X",
-        "initialDate": "2024/12/16",
-        "validUntil": "2030/12/15",
-        "reviewDate": "2027/12/16",
-        "workType": "高处作业",
-        "operationItem": "高处安装、维护、拆除",
-        "actualReviewDate": "",
-        "isRed": false
-    }
+  {
+    "id": 1,
+    "employeeId": "150889",
+    "employeeName": "黄博",
+    "organization": "列车检修服务中心",
+    "workshop": "惠州动车所",
+    "line": "莞惠线",
+    "certName": "特种作业操作证",
+    "issuingAuthority": "",
+    "certNumber": "已报名未考试",
+    "initialDate": "",
+    "validUntil": "",
+    "reviewDate": "",
+    "workType": "高处作业",
+    "operationItem": "高处维护、安装、拆除作业",
+    "actualReviewDate": "",
+    "isRed": false
+  }
 ]
