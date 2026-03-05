@@ -1,74 +1,734 @@
-[
-  {
-    "id": 1,
-    "employeeId": "150889",
-    "employeeName": "黄博",
-    "organization": "列车检修服务中心",
-    "workshop": "惠州动车所",
-    "line": "莞惠线",
-    "certName": "特种作业操作证",
-    "issuingAuthority": "",
-    "certNumber": "已报名未考试",
-    "initialDate": "",
-    "validUntil": "",
-    "reviewDate": "",
-    "workType": "高处作业",
-    "operationItem": "高处维护、安装、拆除作业",
-    "actualReviewDate": "",
-    "isRed": false
-  },
-  {
-    "id": 2,
-    "employeeId": "126816",
-    "employeeName": "钟锐",
-    "organization": "列车检修服务中心",
-    "workshop": "惠州动车所",
-    "line": "莞惠线",
-    "certName": "特种作业操作证",
-    "issuingAuthority": "广州市应急管理局",
-    "certNumber": "T44142419920316255X",
-    "initialDate": "2024/12/16",
-    "validUntil": "2030/12/15",
-    "reviewDate": "2027/12/16",
-    "workType": "高处作业",
-    "operationItem": "高处安装、维护、拆除",
-    "actualReviewDate": "",
-    "isRed": false
-  },
-  {
-    "id": 3,
-    "employeeId": "137602",
-    "employeeName": "陈默",
-    "organization": "列车检修服务中心",
-    "workshop": "惠州动车所",
-    "line": "莞惠线",
-    "certName": "特种作业操作证",
-    "issuingAuthority": "广州市应急管理局",
-    "certNumber": "T441623199610082017",
-    "initialDate": "2020/1/9",
-    "validUntil": "2029/4/16",
-    "reviewDate": "2026/4/16",
-    "workType": "高处作业",
-    "operationItem": "高处安装、维护、拆除",
-    "actualReviewDate": "26年1月4日提报复审",
-    "isRed": true
-  },
-  {
-    "id": 4,
-    "employeeId": "222222",
-    "employeeName": "",
-    "organization": "",
-    "workshop": "",
-    "line": "",
-    "certName": "",
-    "issuingAuthority": "",
-    "certNumber": "",
-    "initialDate": "",
-    "validUntil": "",
-    "reviewDate": "",
-    "workType": "",
-    "operationItem": "",
-    "actualReviewDate": "",
-    "isRed": false
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>特种作业证信息 - 惠州动车所</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+body {
+font-family: 'Inter', system-ui, sans-serif;
+}
+.table-container {
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+overflow-x: scroll;
+scrollbar-width: thin;
+}
+.table-container table {
+min-width: 1200px;
+}
+.table-data {
+white-space: nowrap;
+}
+.text-red {
+color: #ff0000;
+}
+.export-btn {
+transition: all 0.2s ease;
+}
+.export-btn:hover {
+transform: scale(1.05);
+}
+.export-btn:active {
+transform: scale(0.95);
+}
+.modal {
+display: none;
+position: fixed;
+z-index: 100;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+background-color: #fefefe;
+margin: 5% auto;
+padding: 20px;
+border: 1px solid #888;
+width: 90%;
+max-width: 500px;
+border-radius: 8px;
+max-height: 80vh;
+overflow-y: auto;
+}
+.token-modal-content {
+max-width: 400px;
+margin: 15% auto;
+}
+.error-message {
+background-color: #fee2e2;
+border: 1px solid #fca5a5;
+color: #dc2626;
+padding: 1rem;
+margin: 1rem auto;
+max-width: 6xl;
+border-radius: 0.375rem;
+}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav class="bg-white shadow-md">
+<div class="max-w-6xl mx-auto px-4">
+<div class="flex justify-between h-16 items-center">
+<div class="flex items-center">
+<a href="gt.html" class="mr-4 text-gray-600 hover:text-primary transition-colors">
+<i class="fa fa-arrow-left"></i>
+</a>
+<i class="fa fa-train text-primary text-2xl mr-2"></i>
+<span class="text-xl font-bold text-secondary">特种作业证信息</span>
+</div>
+<div class="flex items-center">
+<span class="text-gray-600 mr-2">欢迎您，用户</span>
+<button class="p-1 rounded-full bg-gray-200 hover:bg-gray-300">
+<i class="fa fa-user-circle text-xl text-gray-600"></i>
+</button>
+</div>
+</div>
+</div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+<div class="bg-white rounded-lg shadow-md p-6">
+<h1 class="text-2xl font-bold text-gray-800 mb-6">高处作业证</h1>
+
+<div class="flex justify-between mb-6">
+<a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+<i class="fa fa-arrow-left mr-2"></i>
+返回主页面
+</a>
+<div class="space-x-2">
+<button id="addBtn" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+<i class="fa fa-plus mr-2"></i>
+添加记录
+</button>
+<button id="refreshBtn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+<i class="fa fa-refresh mr-2"></i>
+刷新数据
+</button>
+<button id="exportExcel" class="export-btn inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+<i class="fa fa-file-excel-o mr-2"></i>导出Excel
+</button>
+</div>
+</div>
+
+<div class="mb-6">
+<div class="relative">
+<input type="text" id="searchInput" placeholder="搜索员工姓名、编号或证书编号..."
+class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+<button id="searchBtn" class="absolute right-2 top-2 text-gray-500 hover:text-blue-600">
+<i class="fa fa-search"></i>
+</button>
+</div>
+</div>
+
+<div class="table-container">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工编号</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">员工姓名</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">组织</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">中心站/车间/顶</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属线路</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书名称</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">发证机关</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">证书编号</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">初次领证日期</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">有效期</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">应复审日期</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作业类别</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作项目</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">实际复审日期</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+</tr>
+</thead>
+<tbody id="certTableBody" class="bg-white divide-y divide-gray-200">
+</tbody>
+</table>
+</div>
+</div>
+</main>
+
+<div id="tokenModal" class="modal">
+<div class="modal-content token-modal-content">
+<span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
+<h2 id="tokenModalTitle" class="text-xl font-bold mb-4">身份验证</h2>
+<p class="text-sm text-gray-600 mb-4">修改数据需要GitHub访问授权，请输入您的令牌：</p>
+<div class="mb-4">
+<label for="githubTokenInput" class="block text-sm font-medium text-gray-700">GitHub个人访问令牌</label>
+<input type="password" id="githubTokenInput" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="请输入令牌">
+<p class="mt-2 text-xs text-gray-500">令牌需要拥有repo权限，用于读写仓库数据</p>
+</div>
+<div class="flex justify-end space-x-4">
+<button type="button" class="closeTokenModal inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+取消
+</button>
+<button id="confirmTokenBtn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+确认
+</button>
+</div>
+</div>
+</div>
+
+<div id="certModal" class="modal">
+<div class="modal-content">
+<span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
+<h2 id="modalTitle" class="text-xl font-bold mb-4">添加新证书</h2>
+<form id="certForm" class="grid grid-cols-1 gap-4">
+<input type="hidden" id="certId">
+<div>
+<label for="employeeId" class="block text-sm font-medium text-gray-700">员工编号</label>
+<input type="text" id="employeeId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="employeeName" class="block text-sm font-medium text-gray-700">员工姓名</label>
+<input type="text" id="employeeName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="organization" class="block text-sm font-medium text-gray-700">组织</label>
+<input type="text" id="organization" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="workshop" class="block text-sm font-medium text-gray-700">中心站/车间</label>
+<input type="text" id="workshop" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="line" class="block text-sm font-medium text-gray-700">所属线路</label>
+<input type="text" id="line" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="certName" class="block text-sm font-medium text-gray-700">证书名称</label>
+<input type="text" id="certName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="issuingAuthority" class="block text-sm font-medium text-gray-700">发证机关</label>
+<input type="text" id="issuingAuthority" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="certNumber" class="block text-sm font-medium text-gray-700">证书编号</label>
+<input type="text" id="certNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="initialDate" class="block text-sm font-medium text-gray-700">初次领证日期</label>
+<input type="text" id="initialDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="validUntil" class="block text-sm font-medium text-gray-700">有效期</label>
+<input type="text" id="validUntil" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="reviewDate" class="block text-sm font-medium text-gray-700">应复审日期</label>
+<input type="text" id="reviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="workType" class="block text-sm font-medium text-gray-700">作业类别</label>
+<input type="text" id="workType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="operationItem" class="block text-sm font-medium text-gray-700">操作项目</label>
+<input type="text" id="operationItem" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<label for="actualReviewDate" class="block text-sm font-medium text-gray-700">实际复审日期</label>
+<input type="text" id="actualReviewDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+</div>
+<div>
+<div class="flex items-center">
+<input type="checkbox" id="isRed" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+<label for="isRed" class="ml-2 block text-sm text-gray-700">标记为红色（需注意）</label>
+</div>
+</div>
+<div class="flex justify-end space-x-4">
+<button type="button" class="closeModal inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+取消
+</button>
+<button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+保存
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<footer class="bg-white border-t mt-8 py-6">
+<div class="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
+<p>© 2026 惠州动车所系统. 版权所有.</p>
+</div>
+</footer>
+
+<script>
+const GITHUB_CONFIG = {
+username: 'zhu1yun2',
+repo: 'fei',
+token: null,
+filePath: 'data.json'
+};
+
+const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.filePath}`;
+const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.filePath}`;
+
+let pendingOperation = null;
+
+function showError(message) {
+  const main = document.querySelector('main');
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.innerHTML = `<strong>错误:</strong> ${message}`;
+  if(main) main.prepend(errorDiv);
+  else document.body.prepend(errorDiv);
+  console.error(message);
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    const tableBody = document.getElementById('certTableBody');
+    if(!tableBody) throw new Error("页面缺少表格元素，请检查HTML结构");
+    await loadCertData();
+    bindEvents();
+    bindTokenEvents();
+  } catch (error) {
+    showError(`初始化失败: ${error.message}`);
   }
-]
+});
+
+function bindTokenEvents() {
+  document.querySelectorAll('.close, .closeTokenModal').forEach(btn => {
+    btn.addEventListener('click', closeTokenModal);
+  });
+  document.getElementById('confirmTokenBtn').addEventListener('click', handleConfirmToken);
+}
+
+function openTokenModal(callback) {
+pendingOperation = callback;
+document.getElementById('tokenModal').style.display = 'block';
+}
+
+function closeTokenModal() {
+document.getElementById('tokenModal').style.display = 'none';
+pendingOperation = null;
+document.getElementById('githubTokenInput').value = '';
+}
+
+async function handleConfirmToken() {
+const token = document.getElementById('githubTokenInput').value.trim();
+if (!token) {
+alert('请输入有效的GitHub访问令牌');
+return;
+}
+GITHUB_CONFIG.token = token;
+closeTokenModal();
+if (pendingOperation && typeof pendingOperation === 'function') {
+  try {
+    await pendingOperation();
+  } catch (error) {
+    showError(`操作失败: ${error.message}`);
+  }
+}
+}
+
+async function fetchFromGitHub() {
+try {
+const response = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
+if (!response.ok) {
+if (response.status === 404) {
+return [];
+}
+throw new Error(`GitHub请求失败: ${response.status}`);
+}
+const text = await response.text();
+if(!text.trim()) return [];
+try {
+  const data = JSON.parse(text);
+  return Array.isArray(data) ? data : [];
+} catch(e) {
+  throw new Error(`JSON解析失败: ${e.message}`);
+}
+} catch (error) {
+console.error('从GitHub加载数据失败:', error);
+throw error;
+}
+}
+
+async function saveToGitHub(data) {
+if (!GITHUB_CONFIG.token) {
+throw new Error('需要授权才能保存数据，请输入GitHub访问令牌');
+}
+try {
+let sha = null;
+try {
+const fileInfo = await fetch(GITHUB_API_URL, {
+headers: {
+'Authorization': `token ${GITHUB_CONFIG.token}`,
+'Accept': 'application/vnd.github.v3+json'
+}
+}).then(res => res.json());
+sha = fileInfo.sha;
+} catch (e) {
+  console.log("首次创建文件，不需要SHA");
+}
+
+const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+const response = await fetch(GITHUB_API_URL, {
+method: 'PUT',
+headers: {
+'Authorization': `token ${GITHUB_CONFIG.token}`,
+'Accept': 'application/vnd.github.v3+json',
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({
+message: `更新高处作业证数据 - ${new Date().toLocaleString()}`,
+content: content,
+sha: sha
+})
+});
+
+if (!response.ok) {
+const err = await response.json();
+throw new Error(`GitHub保存失败: ${response.status} - ${err.message || '令牌权限不足'}`);
+}
+return true;
+} catch (error) {
+console.error('保存到GitHub失败:', error);
+throw error;
+}
+}
+
+async function loadCertData(filterText = '') {
+try {
+const data = await fetchFromGitHub();
+const tableBody = document.getElementById('certTableBody');
+tableBody.innerHTML = '';
+
+if (data.length === 0) {
+  tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-gray-500">暂无数据，首次使用需要授权初始化数据</td></tr>`;
+  const defaultData = getDefaultData();
+  openTokenModal(async () => {
+  await saveToGitHub(defaultData);
+  await loadCertData(filterText);
+  });
+  return;
+}
+
+const filteredData = data.filter(cert => {
+if (!filterText) return true;
+const searchText = filterText.toLowerCase();
+return (
+(cert.employeeId && cert.employeeId.toLowerCase().includes(searchText)) ||
+(cert.employeeName && cert.employeeName.toLowerCase().includes(searchText)) ||
+(cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
+);
+});
+
+filteredData.forEach((cert, index) => {
+const row = document.createElement('tr');
+const textClass = cert.isRed ? 'text-red' : 'text-gray-900';
+row.innerHTML = `
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${index + 1}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeId || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeName || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.organization || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workshop || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.line || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certName || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.issuingAuthority || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.certNumber || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.initialDate || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.validUntil || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.reviewDate || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.workType || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.operationItem || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.actualReviewDate || ''}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 table-data">
+<button class="edit-btn mr-2 text-blue-600 hover:text-blue-800" data-id="${cert.id}">
+<i class="fa fa-edit"></i>
+</button>
+<button class="delete-btn text-red-600 hover:text-red-800" data-id="${cert.id}">
+<i class="fa fa-trash"></i>
+</button>
+</td>
+`;
+tableBody.appendChild(row);
+});
+bindEditDeleteEvents();
+} catch (error) {
+showError('加载数据失败: ' + error.message);
+}
+}
+
+function getDefaultData() {
+return [
+{
+id: 1,
+employeeId: '150889',
+employeeName: '黄博',
+organization: '列车检修服务中心',
+workshop: '惠州动车所',
+line: '莞惠线',
+certName: '特种作业操作证',
+issuingAuthority: '',
+certNumber: '已报名未考试',
+initialDate: '',
+validUntil: '',
+reviewDate: '',
+workType: '高处作业',
+operationItem: '高处维护、安装、拆除作业',
+actualReviewDate: '',
+isRed: false
+},
+{
+id: 2,
+employeeId: '126816',
+employeeName: '钟锐',
+organization: '列车检修服务中心',
+workshop: '惠州动车所',
+line: '莞惠线',
+certName: '特种作业操作证',
+issuingAuthority: '广州市应急管理局',
+certNumber: 'T44142419920316255X',
+initialDate: '2024/12/16',
+validUntil: '2030/12/15',
+reviewDate: '2027/12/16',
+workType: '高处作业',
+operationItem: '高处安装、维护、拆除',
+actualReviewDate: '',
+isRed: false
+},
+{
+id: 3,
+employeeId: '137602',
+employeeName: '陈默',
+organization: '列车检修服务中心',
+workshop: '惠州动车所',
+line: '莞惠线',
+certName: '特种作业操作证',
+issuingAuthority: '广州市应急管理局',
+certNumber: 'T441623199610082017',
+initialDate: '2020/1/9',
+validUntil: '2029/4/16',
+reviewDate: '2026/4/16',
+workType: '高处作业',
+operationItem: '高处安装、维护、拆除',
+actualReviewDate: '26年1月4日提报复审',
+isRed: true
+}
+];
+}
+
+function bindEvents() {
+document.getElementById('addBtn').addEventListener('click', function() {
+openModal('add');
+});
+
+document.getElementById('refreshBtn').addEventListener('click', function() {
+loadCertData();
+document.getElementById('searchInput').value = '';
+});
+
+document.getElementById('searchBtn').addEventListener('click', function() {
+const searchText = document.getElementById('searchInput').value.trim();
+loadCertData(searchText);
+});
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+const searchText = this.value.trim();
+loadCertData(searchText);
+}
+});
+
+document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+
+document.querySelectorAll('.close, .closeModal').forEach(btn => {
+  btn.addEventListener('click', closeModal);
+});
+
+document.getElementById('certForm').addEventListener('submit', async function(e) {
+e.preventDefault();
+if (!GITHUB_CONFIG.token) {
+openTokenModal(async () => {
+await saveCert();
+});
+} else {
+await saveCert();
+}
+});
+}
+
+function bindEditDeleteEvents() {
+document.querySelectorAll('.edit-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const id = parseInt(this.getAttribute('data-id'));
+openModal('edit', id);
+});
+});
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const id = parseInt(this.getAttribute('data-id'));
+if (confirm('确定要删除这条记录吗？')) {
+if (!GITHUB_CONFIG.token) {
+openTokenModal(async () => {
+await deleteCert(id);
+});
+} else {
+deleteCert(id);
+}
+}
+});
+});
+}
+
+async function openModal(mode, id = null) {
+const modal = document.getElementById('certModal');
+const form = document.getElementById('certForm');
+const title = document.getElementById('modalTitle');
+
+if (mode === 'add') {
+title.textContent = '添加新证书';
+form.reset();
+document.getElementById('certId').value = '';
+} else if (mode === 'edit' && id) {
+title.textContent = '编辑证书信息';
+try {
+const data = await fetchFromGitHub();
+const cert = data.find(item => item.id === id);
+if (cert) {
+Object.keys(cert).forEach(key => {
+const field = document.getElementById(key);
+if (field) {
+if (field.type === 'checkbox') {
+field.checked = cert[key];
+} else {
+field.value = cert[key] || '';
+}
+}
+});
+document.getElementById('certId').value = id;
+}
+} catch (error) {
+  alert("加载编辑数据失败: " + error.message);
+}
+}
+modal.style.display = 'block';
+}
+
+function closeModal() {
+document.getElementById('certModal').style.display = 'none';
+}
+
+async function saveCert() {
+try {
+const id = document.getElementById('certId').value;
+const isRed = document.getElementById('isRed').checked;
+
+const certData = {
+employeeId: document.getElementById('employeeId').value,
+employeeName: document.getElementById('employeeName').value,
+organization: document.getElementById('organization').value,
+workshop: document.getElementById('workshop').value,
+line: document.getElementById('line').value,
+certName: document.getElementById('certName').value,
+issuingAuthority: document.getElementById('issuingAuthority').value,
+certNumber: document.getElementById('certNumber').value,
+initialDate: document.getElementById('initialDate').value,
+validUntil: document.getElementById('validUntil').value,
+reviewDate: document.getElementById('reviewDate').value,
+workType: document.getElementById('workType').value,
+operationItem: document.getElementById('operationItem').value,
+actualReviewDate: document.getElementById('actualReviewDate').value,
+isRed: isRed
+};
+
+let data = await fetchFromGitHub();
+if (id) {
+const index = data.findIndex(item => item.id === parseInt(id));
+if (index !== -1) {
+data[index] = { ...data[index], ...certData };
+}
+} else {
+const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
+data.push({ id: newId, ...certData });
+}
+
+await saveToGitHub(data);
+await loadCertData();
+closeModal();
+} catch (error) {
+console.error('保存证书失败:', error);
+alert('保存失败: ' + error.message);
+}
+}
+
+async function deleteCert(id) {
+try {
+let data = await fetchFromGitHub();
+data = data.filter(item => item.id !== id);
+await saveToGitHub(data);
+await loadCertData();
+} catch (error) {
+console.error('删除证书失败:', error);
+alert('删除失败: ' + error.message);
+}
+}
+
+async function exportToExcel() {
+try {
+const data = await fetchFromGitHub();
+if (data.length === 0) {
+alert('没有可导出的数据');
+return;
+}
+
+const processedData = data.map(item => {
+const newItem = {};
+const fieldMap = {
+employeeId: '员工编号',
+employeeName: '员工姓名',
+organization: '组织',
+workshop: '中心站/车间',
+line: '所属线路',
+certName: '证书名称',
+issuingAuthority: '发证机关',
+certNumber: '证书编号',
+initialDate: '初次领证日期',
+validUntil: '有效期',
+reviewDate: '应复审日期',
+workType: '作业类别',
+operationItem: '操作项目',
+actualReviewDate: '实际复审日期'
+};
+
+Object.keys(fieldMap).forEach(key => {
+newItem[fieldMap[key]] = item[key] || '';
+});
+
+return newItem;
+});
+
+const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.json_to_sheet(processedData);
+
+ws['!cols'] = [
+{wch: 10}, {wch: 15}, {wch: 10},
+{wch: 20}, {wch: 15}, {wch: 10},
+{wch: 20}, {wch: 20}, {wch: 25},
+{wch: 15}, {wch: 15}, {wch: 15},
+{wch: 15}, {wch: 25}
+];
+
+XLSX.utils.book_append_sheet(wb, ws, "高处作业证数据");
+XLSX.writeFile(wb, `高处作业证_${new Date().toLocaleDateString()}.xlsx`);
+} catch (error) {
+console.error('导出Excel失败:', error);
+alert('导出失败: ' + error.message);
+}
+}
+</script>
+</body>
+</html>
