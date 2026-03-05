@@ -72,7 +72,6 @@ border-radius: 0.375rem;
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-<!-- 导航栏 -->
 <nav class="bg-white shadow-md">
 <div class="max-w-6xl mx-auto px-4">
 <div class="flex justify-between h-16 items-center">
@@ -93,12 +92,10 @@ border-radius: 0.375rem;
 </div>
 </nav>
 
-<!-- 主要内容 -->
 <main class="max-w-6xl mx-auto px-4 py-8">
 <div class="bg-white rounded-lg shadow-md p-6">
 <h1 class="text-2xl font-bold text-gray-800 mb-6">高处作业证</h1>
 
-<!-- 操作按钮组 -->
 <div class="flex justify-between mb-6">
 <a href="gaotie.html" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
 <i class="fa fa-arrow-left mr-2"></i>
@@ -119,7 +116,6 @@ border-radius: 0.375rem;
 </div>
 </div>
 
-<!-- 搜索框 -->
 <div class="mb-6">
 <div class="relative">
 <input type="text" id="searchInput" placeholder="搜索员工姓名、编号或证书编号..."
@@ -130,7 +126,6 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 </div>
 </div>
 
-<!-- 表格容器 -->
 <div class="table-container">
 <table class="min-w-full divide-y divide-gray-200">
 <thead class="bg-gray-50">
@@ -154,14 +149,12 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 </tr>
 </thead>
 <tbody id="certTableBody" class="bg-white divide-y divide-gray-200">
-<!-- 数据将通过JavaScript动态加载 -->
 </tbody>
 </table>
 </div>
 </div>
 </main>
 
-<!-- GitHub令牌输入模态框 -->
 <div id="tokenModal" class="modal">
 <div class="modal-content token-modal-content">
 <span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
@@ -183,7 +176,6 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 </div>
 </div>
 
-<!-- 添加/编辑模态框 -->
 <div id="certModal" class="modal">
 <div class="modal-content">
 <span class="close float-right text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">&times;</span>
@@ -219,7 +211,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 <input type="text" id="issuingAuthority" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
 </div>
 <div>
-<label for="certNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">证书编号</label>
+<label for="certNumber" class="block text-sm font-medium text-gray-700">证书编号</label>
 <input type="text" id="certNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
 </div>
 <div>
@@ -264,7 +256,6 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 </div>
 </div>
 
-<!-- 页脚 -->
 <footer class="bg-white border-t mt-8 py-6">
 <div class="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
 <p>© 2026 惠州动车所系统. 版权所有.</p>
@@ -272,7 +263,6 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 </footer>
 
 <script>
-// GitHub 配置 - 不硬编码令牌
 const GITHUB_CONFIG = {
 username: 'zhu1yun2',
 repo: 'fei',
@@ -280,14 +270,11 @@ token: null,
 filePath: 'data.json'
 };
 
-// 获取GitHub数据URL
 const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.filePath}`;
 const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.filePath}`;
 
-// 全局存储待执行的回调，输入令牌后继续操作
 let pendingOperation = null;
 
-// 显示错误信息
 function showError(message) {
   const main = document.querySelector('main');
   const errorDiv = document.createElement('div');
@@ -298,7 +285,6 @@ function showError(message) {
   console.error(message);
 }
 
-// 初始化数据 - 查看不需要令牌，直接加载
 document.addEventListener('DOMContentLoaded', async function() {
   try {
     const tableBody = document.getElementById('certTableBody');
@@ -311,7 +297,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 });
 
-// 绑定令牌弹窗相关事件
 function bindTokenEvents() {
   document.querySelectorAll('.close, .closeTokenModal').forEach(btn => {
     btn.addEventListener('click', closeTokenModal);
@@ -319,20 +304,17 @@ function bindTokenEvents() {
   document.getElementById('confirmTokenBtn').addEventListener('click', handleConfirmToken);
 }
 
-// 打开令牌弹窗
 function openTokenModal(callback) {
 pendingOperation = callback;
 document.getElementById('tokenModal').style.display = 'block';
 }
 
-// 关闭令牌弹窗
 function closeTokenModal() {
 document.getElementById('tokenModal').style.display = 'none';
 pendingOperation = null;
 document.getElementById('githubTokenInput').value = '';
 }
 
-// 确认令牌，执行后续操作
 async function handleConfirmToken() {
 const token = document.getElementById('githubTokenInput').value.trim();
 if (!token) {
@@ -350,7 +332,6 @@ if (pendingOperation && typeof pendingOperation === 'function') {
 }
 }
 
-// 从GitHub加载数据 - 公开仓库可以直接读取，不需要令牌
 async function fetchFromGitHub() {
 try {
 const response = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
@@ -374,7 +355,6 @@ throw error;
 }
 }
 
-// 保存数据到GitHub - 需要令牌
 async function saveToGitHub(data) {
 if (!GITHUB_CONFIG.token) {
 throw new Error('需要授权才能保存数据，请输入GitHub访问令牌');
@@ -419,7 +399,6 @@ throw error;
 }
 }
 
-// 加载证书数据到表格
 async function loadCertData(filterText = '') {
 try {
 const data = await fetchFromGitHub();
@@ -482,7 +461,6 @@ showError('加载数据失败: ' + error.message);
 }
 }
 
-// 获取默认数据
 function getDefaultData() {
 return [
 {
@@ -542,7 +520,6 @@ isRed: true
 ];
 }
 
-// 绑定事件
 function bindEvents() {
 document.getElementById('addBtn').addEventListener('click', function() {
 openModal('add');
@@ -583,7 +560,6 @@ await saveCert();
 });
 }
 
-// 绑定编辑和删除按钮事件
 function bindEditDeleteEvents() {
 document.querySelectorAll('.edit-btn').forEach(btn => {
 btn.addEventListener('click', function() {
@@ -608,7 +584,6 @@ deleteCert(id);
 });
 }
 
-// 打开模态框
 async function openModal(mode, id = null) {
 const modal = document.getElementById('certModal');
 const form = document.getElementById('certForm');
@@ -643,12 +618,10 @@ document.getElementById('certId').value = id;
 modal.style.display = 'block';
 }
 
-// 关闭模态框
 function closeModal() {
 document.getElementById('certModal').style.display = 'none';
 }
 
-// 保存证书
 async function saveCert() {
 try {
 const id = document.getElementById('certId').value;
@@ -692,7 +665,6 @@ alert('保存失败: ' + error.message);
 }
 }
 
-// 删除证书
 async function deleteCert(id) {
 try {
 let data = await fetchFromGitHub();
@@ -705,7 +677,6 @@ alert('删除失败: ' + error.message);
 }
 }
 
-// 导出为Excel（中文列名） - 查看导出不需要令牌
 async function exportToExcel() {
 try {
 const data = await fetchFromGitHub();
