@@ -162,6 +162,9 @@
                 <label for="githubTokenInput" class="block text-sm font-medium text-gray-700">GitHub个人访问令牌</label>
                 <input type="password" id="githubTokenInput" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="请输入令牌">
                 <p class="mt-2 text-xs text-gray-500">令牌需要拥有repo权限，用于读写仓库数据</p>
+                <p class="mt-2 text-xs text-blue-500">
+                    <a href="https://github.com/settings/tokens/new" target="_blank" class="underline">点击这里创建新的GitHub访问令牌</a> (请勾选repo权限)
+                </p>
             </div>
             <div class="flex justify-end space-x-4">
                 <button type="button" class="closeTokenModal inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -273,7 +276,7 @@
         // 构建GitHub API URL
         const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.filePath}`;
         const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.filePath}`;
-        
+
         let pendingOperation = null;
 
         // 显示错误信息
@@ -297,13 +300,13 @@
             try {
                 const tableBody = document.getElementById('certTableBody');
                 if(!tableBody) throw new Error("页面缺少表格元素，请检查HTML结构");
-
+                
                 // 尝试从本地存储加载token
                 const savedToken = localStorage.getItem('github_token');
                 if(savedToken) {
                     GITHUB_CONFIG.token = savedToken;
                 }
-
+                
                 await loadCertData();
                 bindEvents();
                 bindTokenEvents();
@@ -317,7 +320,7 @@
             document.querySelectorAll('.close, .closeTokenModal').forEach(btn => {
                 btn.addEventListener('click', closeTokenModal);
             });
-
+            
             document.getElementById('confirmTokenBtn').addEventListener('click', handleConfirmToken);
         }
 
@@ -351,14 +354,24 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('令牌无效或权限不足');
+                    // 尝试获取更详细的错误信息
+                    let errorMsg = '令牌无效或权限不足';
+                    try {
+                        const errorData = await response.json();
+                        if(errorData.message) {
+                            errorMsg = errorData.message;
+                        }
+                    } catch(e) {
+                        console.log('无法解析错误响应');
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 // 保存token到本地存储
                 localStorage.setItem('github_token', token);
                 GITHUB_CONFIG.token = token;
                 closeTokenModal();
-
+                
                 if (pendingOperation && typeof pendingOperation === 'function') {
                     try {
                         await pendingOperation();
@@ -385,7 +398,7 @@
                     }
                     throw new Error(`GitHub请求失败: ${response.status}`);
                 }
-
+                
                 const text = await response.text();
                 if(!text.trim()) return [];
                 
@@ -406,7 +419,7 @@
             if (!GITHUB_CONFIG.token) {
                 throw new Error('需要授权才能保存数据，请输入GitHub访问令牌');
             }
-
+            
             try {
                 let sha = null;
                 
@@ -429,7 +442,7 @@
                 } catch (e) {
                     console.log("首次创建文件，不需要SHA");
                 }
-
+                
                 // 准备数据
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
                 
@@ -437,7 +450,7 @@
                 const response = await fetch(GITHUB_API_URL, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
@@ -447,12 +460,12 @@
                         sha: sha
                     })
                 });
-
+                
                 if (!response.ok) {
                     const err = await response.json();
                     throw new Error(`GitHub保存失败: ${response.status} - ${err.message || '令牌权限不足'}`);
                 }
-
+                
                 return true;
             } catch (error) {
                 console.error('保存到GitHub失败:', error);
@@ -466,7 +479,7 @@
                 const data = await fetchFromGitHub();
                 const tableBody = document.getElementById('certTableBody');
                 tableBody.innerHTML = '';
-
+                
                 if (data.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="16" class="px-4 py-3 text-center text-sm text-gray-500">暂无数据，首次使用需要授权初始化数据</td></tr>`;
                     const defaultData = getDefaultData();
@@ -476,7 +489,7 @@
                     });
                     return;
                 }
-
+                
                 // 过滤数据
                 const filteredData = data.filter(cert => {
                     if (!filterText) return true;
@@ -487,7 +500,7 @@
                         (cert.certNumber && cert.certNumber.toLowerCase().includes(searchText))
                     );
                 });
-
+                
                 // 填充表格
                 filteredData.forEach((cert, index) => {
                     const row = document.createElement('tr');
@@ -501,7 +514,7 @@
                         if (isNaN(date.getTime())) return dateStr; // 如果无法解析，返回原始字符串
                         return date.toISOString().split('T')[0]; // 格式化为YYYY-MM-DD
                     };
-
+                    
                     row.innerHTML = `
                         <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${index + 1}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm ${textClass} table-data">${cert.employeeId || ''}</td>
@@ -529,7 +542,7 @@
                     `;
                     tableBody.appendChild(row);
                 });
-
+                
                 bindEditDeleteEvents();
             } catch (error) {
                 showError('加载数据失败: ' + error.message);
@@ -601,30 +614,30 @@
             document.getElementById('addBtn').addEventListener('click', function() {
                 openModal('add');
             });
-
+            
             document.getElementById('refreshBtn').addEventListener('click', function() {
                 loadCertData();
                 document.getElementById('searchInput').value = '';
             });
-
+            
             document.getElementById('searchBtn').addEventListener('click', function() {
                 const searchText = document.getElementById('searchInput').value.trim();
                 loadCertData(searchText);
             });
-
+            
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     const searchText = this.value.trim();
                     loadCertData(searchText);
                 }
             });
-
+            
             document.getElementById('exportExcel').addEventListener('click', exportToExcel);
-
+            
             document.querySelectorAll('.close, .closeModal').forEach(btn => {
                 btn.addEventListener('click', closeModal);
             });
-
+            
             document.getElementById('certForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!GITHUB_CONFIG.token) {
@@ -645,7 +658,7 @@
                     openModal('edit', id);
                 });
             });
-
+            
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
@@ -667,7 +680,7 @@
             const modal = document.getElementById('certModal');
             const form = document.getElementById('certForm');
             const title = document.getElementById('modalTitle');
-
+            
             if (mode === 'add') {
                 title.textContent = '添加新证书';
                 form.reset();
@@ -705,6 +718,7 @@
                     showError("加载编辑数据失败: " + error.message);
                 }
             }
+            
             modal.style.display = 'block';
         }
 
@@ -718,7 +732,7 @@
             try {
                 const id = document.getElementById('certId').value;
                 const isRed = document.getElementById('isRed').checked;
-
+                
                 const certData = {
                     employeeId: document.getElementById('employeeId').value,
                     employeeName: document.getElementById('employeeName').value,
@@ -736,7 +750,7 @@
                     actualReviewDate: document.getElementById('actualReviewDate').value,
                     isRed: isRed
                 };
-
+                
                 let data = await fetchFromGitHub();
                 
                 if (id) {
@@ -750,7 +764,7 @@
                     const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
                     data.push({ id: newId, ...certData });
                 }
-
+                
                 await saveToGitHub(data);
                 await loadCertData();
                 closeModal();
@@ -781,7 +795,7 @@
                     alert('没有可导出的数据');
                     return;
                 }
-
+                
                 const processedData = data.map(item => {
                     const newItem = {};
                     const fieldMap = {
@@ -800,14 +814,14 @@
                         operationItem: '操作项目',
                         actualReviewDate: '实际复审日期'
                     };
-
+                    
                     Object.keys(fieldMap).forEach(key => {
                         newItem[fieldMap[key]] = item[key] || '';
                     });
-
+                    
                     return newItem;
                 });
-
+                
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.json_to_sheet(processedData);
                 ws['!cols'] = [
@@ -817,7 +831,7 @@
                     {wch: 15}, {wch: 15}, {wch: 15},
                     {wch: 15}, {wch: 25}
                 ];
-
+                
                 XLSX.utils.book_append_sheet(wb, ws, "高处作业证数据");
                 XLSX.writeFile(wb, `高处作业证_${new Date().toLocaleDateString()}.xlsx`);
             } catch (error) {
